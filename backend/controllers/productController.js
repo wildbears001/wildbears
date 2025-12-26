@@ -100,6 +100,7 @@ const singleProduct = async (req, res) => {
 };
 
 // Update Product Details (without image editing)
+// Update Product (SAFE + IMAGE SUPPORT)
 const updateProduct = async (req, res) => {
   try {
     const {
@@ -114,33 +115,65 @@ const updateProduct = async (req, res) => {
       isPreOrder,
       preOrderAvailableDate,
       maxPreOrderQty,
+      existingImages,
     } = req.body;
 
-    const updatedFields = {
-      name,
-      description,
-      type,
-      features,
-      quality,
-      price: Number(price),
-      actualPrice: Number(actualPrice),
-      isPreOrder: isPreOrder === true || isPreOrder === 'true',
-      preOrderAvailableDate: isPreOrder === 'true' ? new Date(preOrderAvailableDate) : null,
-      maxPreOrderQty: isPreOrder === 'true' ? Number(maxPreOrderQty) || null : null,
-    };
-
-    const updated = await productModel.findByIdAndUpdate(_id, updatedFields, { new: true });
-
-    if (!updated) {
-      return res.status(404).json({ success: false, message: 'Product not found' });
+    const product = await productModel.findById(_id);
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Product not found" });
     }
 
-    res.json({ success: true, message: 'Product updated successfully', updated });
+    // ---------- IMAGE HANDLING ----------
+    let images = product.image;
+
+    if (existingImages) {
+      images = JSON.parse(existingImages);
+    }
+
+    if (req.files) {
+      const fields = ["image1", "image2", "image3", "image4"];
+      for (let i = 0; i < fields.length; i++) {
+        if (req.files[fields[i]]) {
+          const upload = await cloudinary.uploader.upload(
+            req.files[fields[i]][0].path,
+            { resource_type: "image" }
+          );
+          images[i] = upload.secure_url;
+        }
+      }
+    }
+
+    // ---------- SAFE FIELD UPDATES ----------
+    if (name !== undefined) product.name = name;
+    if (description !== undefined) product.description = description;
+    if (type !== undefined) product.type = type;
+    if (features !== undefined) product.features = features;
+    if (quality !== undefined) product.quality = quality;
+
+    if (price !== undefined) product.price = Number(price);
+    if (actualPrice !== undefined) product.actualPrice = Number(actualPrice);
+
+    product.isPreOrder = isPreOrder === "true" || isPreOrder === true;
+
+    product.preOrderAvailableDate = product.isPreOrder
+      ? new Date(preOrderAvailableDate)
+      : null;
+
+    product.maxPreOrderQty = product.isPreOrder
+      ? Number(maxPreOrderQty) || null
+      : null;
+
+    product.image = images;
+
+    await product.save(); // ✅ validation-safe
+
+    res.json({ success: true, message: "Product updated successfully", product });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 export {
   addProducts,
