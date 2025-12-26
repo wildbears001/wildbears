@@ -1,15 +1,3 @@
-// import express from 'express';
-// import { loginUser,registerUser,adminLogin } from '../controllers/userController.js';
-
-// const userRouter = express.Router();
-
-// userRouter.post('/register',registerUser)
-// userRouter.post('/login',loginUser)
-// userRouter.post('/admin',adminLogin)
-
-// export default userRouter;
-
-
 import express from 'express';
 import { loginUser,registerUser,adminLogin , getUserProfile , updateProfile , getTransactions , getProfileStats} from '../controllers/userController.js';
 import authMiddleware from "../middleware/authMiddleware.js"; // ✅ make sure you have middleware to decode token
