@@ -237,7 +237,7 @@ const updateStatus = async (req, res) => {
           <h2>Hello ${order.address.firstName},</h2>
           <p>Your order <strong>${order._id}</strong> status has been updated to:</p>
           <h3 style="color: green;">${status}</h3>
-          <p>Thank you for shopping with <strong>Heven</strong>.</p>
+          <p>Thank you for shopping with <strong>WILD BEARS</strong>.</p>
         </div>
       `,
     }

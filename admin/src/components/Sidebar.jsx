@@ -26,6 +26,14 @@ const Sidebar = () => {
           <img className='w-5 h-5' src={assets.user_icon} alt="" />
           <p className='hidden md:block'>Coupon Management</p>
         </NavLink>
+        <NavLink to={'/dashboard'} className='flex items-center gap-3 border border-gray-300 border-r-0 px-3 py-2 rounded-l-2x'>
+          <img className='w-5 h-5' src={assets.user_icon} alt="" />
+          <p className='hidden md:block'>Dash Board</p>
+        </NavLink>
+        <NavLink to={'/analytics'} className='flex items-center gap-3 border border-gray-300 border-r-0 px-3 py-2 rounded-l-2x'>
+          <img className='w-5 h-5' src={assets.user_icon} alt="" />
+          <p className='hidden md:block'>Analytics</p>
+        </NavLink>
         
       </div>
     </div>

@@ -91,6 +91,7 @@ import category_trouser from "./category_trouser.png";
 import category_jacket from "./category_jacket.png";
 
 
+
 export const assets = {
     logo,
     hero_img,

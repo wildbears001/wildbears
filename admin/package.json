@@ -12,6 +12,10 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.0.4",
     "axios": "^1.7.9",
+    "framer-motion": "^12.23.26",
+    "jspdf": "^3.0.4",
+    "lucide-react": "^0.562.0",
+    "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.1.5",

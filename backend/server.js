@@ -14,7 +14,8 @@ import adminUserRoute from "./routes/adminUserRoute.js";
 import couponRoutes from './routes/couponRoutes.js';
 import returnRoutes from "./routes/returnRoutes.js";
 import otpRoutes from "./routes/otpRoutes.js";
-
+import adminDashboardRoutes from "./routes/adminDashboardRoutes.js";
+import adminAnalyticsRoutes from "./routes/adminAnalyticsRoutes.js";
 
 
 
@@ -54,7 +55,9 @@ app.use("/api/otp", otpRoutes);
 
 
 
-
+//DASHBOARD ROUTES
+app.use("/api/admin/dashboard", adminDashboardRoutes);
+app.use("/api/admin/analytics", adminAnalyticsRoutes);
 
 
 app.get('/',(req,res)=>{
