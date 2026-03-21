@@ -17,12 +17,13 @@ const Add = ({ token }) => {
   const [quality, setQuality] = useState('');
   const [actualPrice, setActualPrice] = useState('');
   const [price, setPrice] = useState('');
+  const [stock, setStock] = useState('');
   const [category, setCategory] = useState('Men');
   const [subCategory, setSubCategory] = useState('Topwear');
   const [bestseller, setBestseller] = useState(false);
   const [sizes, setSizes] = useState([]);
 
-  // 🆕 Pre-order fields
+  // Pre-order fields
   const [isPreOrder, setIsPreOrder] = useState(false);
   const [preOrderAvailableDate, setPreOrderAvailableDate] = useState('');
   const [maxPreOrderQty, setMaxPreOrderQty] = useState('');
@@ -38,6 +39,7 @@ const Add = ({ token }) => {
       formData.append('features', features);
       formData.append('quality', quality);
       formData.append('price', price);
+      formData.append('stock', stock);
       formData.append('category', category);
       formData.append('subCategory', subCategory);
       formData.append('bestseller', bestseller);
@@ -71,6 +73,7 @@ const Add = ({ token }) => {
         setImage4(false);
         setActualPrice('');
         setPrice('');
+        setStock('');
         setType('');
         setQuality('');
         setFeatures('');
@@ -89,166 +92,183 @@ const Add = ({ token }) => {
   };
 
   return (
-    <form onSubmit={onSubmitHandler} className='flex flex-col w-full items-start gap-3'>
+    <div className='max-w-5xl mx-auto'>
+      <div className='mb-8'>
+        <h2 className='text-3xl font-bold text-gray-800 tracking-tight'>Add New Product</h2>
+        <p className='text-gray-500 mt-1'>Fill in the details below to add a new product to your store.</p>
+      </div>
 
-      <div>
-        <p className='mb-2'> Upload Image</p>
-        <div className='flex gap-2'>
-          <label htmlFor="image1">
-            <img  className='w-20' src={!image1 ? assets.upload_area:URL.createObjectURL(image1)} alt="" />
-            <input onChange={(e)=>setImage1(e.target.files[0])} type="file" id='image1' hidden />
-          </label>
-          <label htmlFor="image2">
-            <img className='w-20'  src={!image2 ? assets.upload_area:URL.createObjectURL(image2)} alt="" />
-            <input onChange={(e)=>setImage2(e.target.files[0])} type="file" id='image2' hidden />
-          </label>
-          <label htmlFor="image3">
-            <img className='w-20'  src={!image3 ? assets.upload_area:URL.createObjectURL(image3)} alt="" />
-            <input  onChange={(e)=>setImage3(e.target.files[0])}type="file" id='image3' hidden />
-          </label>
-          <label htmlFor="image4">
-            <img  className='w-20' src={!image4 ? assets.upload_area:URL.createObjectURL(image4)} alt="" />
-            <input  onChange={(e)=>setImage4(e.target.files[0])}type="file" id='image4' hidden />
-          </label>
+      <form onSubmit={onSubmitHandler} className='bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-8'>
+        
+        {/* Images Section */}
+        <div className='bg-gray-50 p-6 rounded-xl border border-gray-100'>
+          <p className='text-sm font-semibold text-gray-700 mb-4'>Product Imagery</p>
+          <div className='flex gap-4 overflow-x-auto pb-2'>
+            {[
+              { id: 'image1', state: image1, setter: setImage1 },
+              { id: 'image2', state: image2, setter: setImage2 },
+              { id: 'image3', state: image3, setter: setImage3 },
+              { id: 'image4', state: image4, setter: setImage4 },
+            ].map((img, idx) => (
+              <label key={idx} htmlFor={img.id} className='cursor-pointer group relative flex-shrink-0'>
+                <div className='w-32 h-32 rounded-xl border-2 border-dashed border-gray-300 bg-white flex items-center justify-center overflow-hidden hover:border-gray-400 transition-all'>
+                  <img 
+                    className={`object-cover ${img.state ? 'w-full h-full' : 'w-10 opacity-50'}`} 
+                    src={!img.state ? assets.upload_area : URL.createObjectURL(img.state)} 
+                    alt={`Upload ${idx+1}`} 
+                  />
+                </div>
+                {!img.state && <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/5 transition-opacity rounded-xl'><span className='text-xs font-medium text-gray-500'>Upload</span></div>}
+                <input onChange={(e) => img.setter(e.target.files[0])} type="file" id={img.id} hidden accept="image/*" />
+              </label>
+            ))}
+          </div>
         </div>
-      </div>
-      <div className='w-full'>
-        <p className='mb-2'>Product Name</p>
-        <input onChange={(e)=>setName(e.target.value)} value={name} className='w-full max-w-[500px] px-3 py-2' type="text" placeholder='Type here' required />
-      </div>
 
+        {/* Basic Details */}
+        <div className='grid grid-cols-1 gap-6'>
+          <div>
+            <label className='block text-sm font-medium text-gray-700 mb-2'>Product Name</label>
+            <input onChange={(e)=>setName(e.target.value)} value={name} className='w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all outline-none' type="text" placeholder='e.g. Classic White T-Shirt' required />
+          </div>
 
-      <div className='w-full'>
-        <p className='mb-2'>Product Description</p>
-        <textarea onChange={(e)=>setDescription(e.target.value)} value={description} className='w-full max-w-[500px] px-3 py-2' type="text" placeholder='Write Content' required />
-      </div>
-       <div className='w-full'>
-        <p className='mb-2'>Product Type</p>
-        <textarea onChange={(e)=>setType(e.target.value)} value={type} className='w-full max-w-[500px] px-3 py-2' type="text" placeholder='Write Content' required />
-      </div>
-       <div className='w-full'>
-        <p className='mb-2'>Product Features</p>
-        <textarea onChange={(e)=>setFeatures(e.target.value)} value={features} className='w-full max-w-[500px] px-3 py-2' type="text" placeholder='Write Content' required />
-      </div>
-       <div className='w-full'>
-        <p className='mb-2'>Product Fabric</p>
-        <textarea onChange={(e)=>setQuality(e.target.value)} value={quality} className='w-full max-w-[500px] px-3 py-2' type="text" placeholder='Write Content' required />
-      </div>
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>Description</label>
+              <textarea onChange={(e)=>setDescription(e.target.value)} value={description} className='w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all outline-none min-h-[120px]' placeholder='Detailed product description...' required />
+            </div>
+            <div className='flex flex-col gap-6'>
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>Features</label>
+                <textarea onChange={(e)=>setFeatures(e.target.value)} value={features} className='w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all outline-none h-[40px]' placeholder='Key features...' required />
+              </div>
+              <div className='grid grid-cols-2 gap-4'>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>Type</label>
+                  <input onChange={(e)=>setType(e.target.value)} value={type} className='w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all outline-none' type="text" placeholder='e.g. T-Shirt' required />
+                </div>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>Fabric/Quality</label>
+                  <input onChange={(e)=>setQuality(e.target.value)} value={quality} className='w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all outline-none' type="text" placeholder='e.g. 100% Cotton' required />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-      <div className='flex flex-col sm:flex-row  gap-2 w-full sm:gap-8 '>
-        <div>
-            <p  className='mb-2'>Product Category</p>
-            <select onChange={(e)=>setCategory(e.target.value)} className='w-full px-3 py-2' >
+        {/* Pricing, Inventory & Category */}
+        <div className='bg-gray-50 p-6 rounded-xl border border-gray-100 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6'>
+          <div className='md:col-span-1'>
+            <label className='block text-sm font-medium text-gray-700 mb-2'>Category</label>
+            <select onChange={(e)=>setCategory(e.target.value)} value={category} className='w-full px-4 py-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-gray-900'>
               <option value="Men">Men</option>
               <option value="Unisex">Unisex</option>
               <option value="Women">Women</option>
               <option value="Kids">Kids</option>
-              <option value="Footwear">Foot Wear</option>
-
+              <option value="Footwear">Footwear</option>
             </select>
+          </div>
+          <div className='md:col-span-1'>
+            <label className='block text-sm font-medium text-gray-700 mb-2'>Sub Category</label>
+            <select onChange={(e)=>setSubCategory(e.target.value)} value={subCategory} className='w-full px-4 py-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-gray-900'>
+              <option value="Topwear">Topwear</option>
+              <option value="Bottomwear">Bottomwear</option>
+              <option value="Winterwear">Winterwear</option>
+              <option value="Footwear">Footwear</option>
+            </select>
+          </div>
+          <div className='md:col-span-1'>
+            <label className='block text-sm font-medium text-gray-700 mb-2'>Actual Price (₹)</label>
+            <input onChange={(e)=>setActualPrice(e.target.value)} value={actualPrice} className='w-full px-4 py-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-gray-900' type="number" placeholder='0' required min="0"/>
+          </div>
+          <div className='md:col-span-1'>
+            <label className='block text-sm font-medium text-gray-700 mb-2'>Selling Price (₹)</label>
+            <input onChange={(e)=>setPrice(e.target.value)} value={price} className='w-full px-4 py-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-gray-900 font-semibold text-green-700' type="number" placeholder='0' required min="0"/>
+          </div>
+          <div className='md:col-span-1'>
+            <label className='block text-sm font-medium text-gray-700 mb-2'>Stock Count</label>
+            <input onChange={(e)=>setStock(e.target.value)} value={stock} className='w-full px-4 py-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-gray-900 text-blue-700 font-semibold' type="number" placeholder='0' required min="0"/>
+          </div>
         </div>
 
-        <div>
-            <p className='mb-2'> Sub Category</p>
-            <select onChange={(e)=>setSubCategory(e.target.value)} className='w-full px-3 py-2' >
-              <option value="Topwear">Top Wear</option>
-              <option value="Bottomwear">Bottom Wear</option>
-              <option value="Winterwear">Winter Wear</option>
-              <option value="Footwear">Foot Wear</option>
-
-            </select>
-        </div>
-         <div>
+        {/* Sizes & Toggles */}
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
+          <div>
+            <label className='block text-sm font-medium text-gray-700 mb-3'>Available Sizes</label>
+            <div className='flex flex-wrap gap-3'>
+              {['S', 'M', 'L', 'XL', 'XXL'].map((size) => (
+                <div 
+                  key={size}
+                  onClick={() => setSizes(prev => prev.includes(size) ? prev.filter(item => item !== size) : [...prev, size])}
+                  className={`w-12 h-12 flex items-center justify-center rounded-xl font-medium cursor-pointer transition-all border
+                    ${sizes.includes(size) ? 'bg-gray-900 text-white border-gray-900 shadow-md transform scale-105' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'}`}
+                >
+                  {size}
+                </div>
+              ))}
+            </div>
+          </div>
           
-          <p className='mb-2'>Actual Price</p>
-          <input onChange={(e)=>setActualPrice(e.target.value)} value={actualPrice} className='w-full px-3 py-2 sm:w-[120px]' type="number" placeholder='Price in INR' />
-        </div>
-         <div>
-          <p className='mb-2'>Selling Price</p>
-          <input onChange={(e)=>setPrice(e.target.value)} value={price} className='w-full px-3 py-2 sm:w-[120px]' type="number" placeholder='Price in INR' />
-        </div>
-      </div>
-
-
-      <div>
-        <p className='mb-2'> Product Sizes</p>
-        <div className='flex gap-3'>
-          <div  onClick={()=>setSizes(prev=>prev.includes("S")? prev.filter(item => item !== "S") : [...prev,"S"])}>
-            <p className={`${sizes.includes("S") ? "bg-black text-white": "bg-yellow-700"} px-3 py-1 cursor-pointer`}>S</p>
-          </div>
-
-          <div onClick={()=>setSizes(prev=>prev.includes("M")? prev.filter(item => item !== "M") : [...prev,"M"])}>
-            <p className={`${sizes.includes("M") ? "bg-black text-white": "bg-yellow-700"} px-3 py-1 cursor-pointer`}>M</p>
-          </div>
-
-          <div onClick={()=>setSizes(prev=>prev.includes("L")? prev.filter(item => item !== "L") : [...prev,"L"])}>
-            <p className={`${sizes.includes("L") ? "bg-black text-white": "bg-yellow-700"} px-3 py-1 cursor-pointer`}>L</p>
-          </div>
-
-          <div onClick={()=>setSizes(prev=>prev.includes("XL")? prev.filter(item => item !== "XL") : [...prev,"XL"])}>
-            <p className={`${sizes.includes("XL") ? "bg-black text-white": "bg-yellow-700"} px-3 py-1 cursor-pointer`}>XL</p>
-          </div>
-          <div onClick={()=>setSizes(prev=>prev.includes("XXL")? prev.filter(item => item !== "XXL") : [...prev,"XXL"])}>
-            <p className={`${sizes.includes("XXL") ? "bg-black text-white": "bg-yellow-700"} px-3 py-1 cursor-pointer`}>XXL</p>
-          </div>
-
-        </div>
-      </div>
-      
-      <div className='flex gap-2 mt-2 '>
-        <input onChange={() => setBestseller((prev) => !prev)} checked={bestseller} type='checkbox' id='bestseller' />
-        <label className='cursor-pointer' htmlFor='bestseller'>Add to Bestseller</label>
-      </div>
-
-      {/* 🆕 Pre-order Section */}
-      <div className='w-full flex flex-col sm:flex-row gap-4'>
-        <div className='flex items-center gap-2'>
-          <input
-            type='checkbox'
-            id='isPreOrder'
-            checked={isPreOrder}
-            onChange={() => setIsPreOrder((prev) => !prev)}
-          />
-          <label htmlFor='isPreOrder' className='cursor-pointer font-medium'>
-            Enable Pre-Order
-          </label>
-        </div>
-
-        {isPreOrder && (
-          <>
-            <div className='flex flex-col'>
-              <label htmlFor='preOrderDate' className='mb-1'>Shipping Date</label>
-              <input
-                type='date'
-                id='preOrderDate'
-                className='px-3 py-2 w-full sm:w-[200px]'
-                value={preOrderAvailableDate}
-                onChange={(e) => setPreOrderAvailableDate(e.target.value)}
-                required={isPreOrder}
+          <div className='flex flex-col justify-center'>
+            <label className='flex items-center gap-3 p-4 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors w-max'>
+              <input 
+                onChange={() => setBestseller((prev) => !prev)} 
+                checked={bestseller} 
+                type='checkbox' 
+                className='w-5 h-5 accent-gray-900 rounded cursor-pointer' 
               />
-            </div>
-            <div className='flex flex-col'>
-              <label htmlFor='maxQty' className='mb-1'>Max Pre-Orders</label>
-              <input
-                type='number'
-                id='maxQty'
-                className='px-3 py-2 w-full sm:w-[150px]'
-                value={maxPreOrderQty}
-                onChange={(e) => setMaxPreOrderQty(e.target.value)}
-                required={isPreOrder}
-              />
-            </div>
-          </>
-        )}
-      </div>
+              <span className='font-medium text-gray-800 tracking-wide'>Mark as Bestseller ✨</span>
+            </label>
+          </div>
+        </div>
 
-      {/* Submit Button */}
-      <button type='submit' className='w-28 py-3 mt-4 bg-yellow-700 text-black'>
-        ADD
-      </button>
-    </form>
+        {/* Pre-order Section */}
+        <div className='border-t border-gray-100 pt-8'>
+          <div className='flex items-center gap-3 mb-6'>
+            <div className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors ${isPreOrder ? 'bg-gray-900' : 'bg-gray-300'}`} onClick={() => setIsPreOrder(!isPreOrder)}>
+              <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${isPreOrder ? 'translate-x-6' : 'translate-x-0'}`}></div>
+            </div>
+            <span className='font-medium text-gray-800'>Enable Pre-Order Mode</span>
+          </div>
+
+          {isPreOrder && (
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-6 bg-amber-50/50 p-6 rounded-xl border border-amber-100'>
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>Shipping Date</label>
+                <input
+                  type='date'
+                  className='w-full px-4 py-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500'
+                  value={preOrderAvailableDate}
+                  onChange={(e) => setPreOrderAvailableDate(e.target.value)}
+                  required={isPreOrder}
+                />
+              </div>
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>Max Pre-Order Capacity</label>
+                <input
+                  type='number'
+                  className='w-full px-4 py-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500'
+                  value={maxPreOrderQty}
+                  onChange={(e) => setMaxPreOrderQty(e.target.value)}
+                  required={isPreOrder}
+                  placeholder='0'
+                  min="1"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Submit */}
+        <div className='pt-4'>
+          <button type='submit' className='w-full sm:w-auto px-10 py-4 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800 active:scale-95 transition-all shadow-lg shadow-gray-900/20'>
+            Add Product to Store
+          </button>
+        </div>
+
+      </form>
+    </div>
   );
 };
 
 export default Add;
-

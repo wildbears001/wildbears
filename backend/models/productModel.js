@@ -14,6 +14,7 @@ const productSchema = new mongoose.Schema({
   sizes: { type: Array, required: true },
   bestseller: { type: Boolean },
   date: { type: Number, required: true },
+  stock: { type: Number, required: true, default: 0 },
 
   // 🚀 Pre-order fields
   isPreOrder: { type: Boolean, default: false },

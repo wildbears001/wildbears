@@ -110,15 +110,24 @@ const adminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (
-      email === process.env.ADMIN_EMAIL &&
-      password === process.env.ADMIN_PASSWORD
-    ) {
-      const token = jwt.sign(email + password, process.env.JWT_SECRET);
-      res.json({ success: true, token });
-    } else {
-      res.json({ success: false, message: "Invalid Credentials" });
+    // 1. Env Admin Check (Super Admin)
+    if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
+      const token = jwt.sign({ email, type: 'ENV_ADMIN', role: 'Super Admin' }, process.env.JWT_SECRET);
+      return res.json({ success: true, token, role: 'Super Admin' });
     }
+
+    // 2. DB Admins Check (Roles & Managers)
+    const adminModel = (await import('../models/adminModel.js')).default;
+    const adminUser = await adminModel.findOne({ email });
+    if (adminUser) {
+       const isMatch = await bcrypt.compare(password, adminUser.password);
+       if(isMatch) {
+          const token = jwt.sign({ id: adminUser._id, role: adminUser.role }, process.env.JWT_SECRET);
+          return res.json({ success: true, token, role: adminUser.role });
+       }
+    }
+
+    res.json({ success: false, message: "Invalid Credentials" });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });

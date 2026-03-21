@@ -53,6 +53,10 @@ const Product = () => {
   });
 
   const handleAddToCart = () => {
+    if (productData.stock <= 0) {
+      toast.error('This product is out of stock.');
+      return;
+    }
     if (!selectedSize) {
       toast.error('Please select a size before adding to cart.');
       return;
@@ -61,6 +65,10 @@ const Product = () => {
   };
 
   const handleBuyNow = () => {
+    if (productData.stock <= 0) {
+      toast.error('This product is out of stock.');
+      return;
+    }
     if (!selectedSize) {
       toast.error('Please select a size before purchasing.');
       return;
@@ -85,7 +93,8 @@ const Product = () => {
     subCategory,
     isPreOrder,
     preOrderAvailableDate,
-    maxPreOrderQty
+    maxPreOrderQty,
+    stock
   } = productData;
 
   const discountPercentage =
@@ -170,6 +179,16 @@ const Product = () => {
               ({discountPercentage}% OFF)
             </span>
           </p>
+
+          {stock <= 0 ? (
+            <p className="mt-3 text-lg font-bold text-red-600 bg-red-50 border border-red-200 inline-block px-4 py-1.5 rounded-full">
+              Out of Stock
+            </p>
+          ) : stock > 0 && stock <= 3 ? (
+            <p className="mt-3 text-md font-semibold text-orange-600 bg-orange-50 border border-orange-200 inline-block px-4 py-1.5 rounded-full">
+              Hurry! Only {stock} left in stock!
+            </p>
+          ) : null}
 
           {isPreOrder && (
             <div className="bg-yellow-100 border border-yellow-500 p-4 rounded mt-5 text-sm">

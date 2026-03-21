@@ -53,11 +53,54 @@ import {
   Clock,
   Package,
   Users,
-  ShoppingCart
+  ShoppingCart,
+  Banknote
 } from "lucide-react";
+import { toast } from 'react-toastify';
 
 const Dashboard = ({ token }) => {
   const [stats, setStats] = useState(null);
+  const [isCodEnabled, setIsCodEnabled] = useState(false);
+  const [socials, setSocials] = useState({ instagram: '', facebook: '', twitter: '', youtube: '', phone: '', email: '' });
+  const [savingSocials, setSavingSocials] = useState(false);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await axios.get(`${backendUrl}/api/settings/get`);
+        if (res.data?.success) {
+           setIsCodEnabled(res.data.settings.isCodEnabled);
+           if(res.data.settings.socialLinks) {
+              setSocials(prev => ({ ...prev, ...res.data.settings.socialLinks }));
+           }
+           if(res.data.settings.contactInfo) {
+              setSocials(prev => ({ ...prev, phone: res.data.settings.contactInfo.phone || '', email: res.data.settings.contactInfo.email || '' }));
+           }
+        }
+      } catch (err) { console.error(err); }
+    };
+    fetchSettings();
+  }, []);
+
+  const toggleCod = async () => {
+    try {
+      const res = await axios.post(`${backendUrl}/api/settings/update-cod`, { isCodEnabled: !isCodEnabled }, { headers: { token } });
+      if (res.data?.success) {
+        setIsCodEnabled(!isCodEnabled);
+        toast.success(res.data.message);
+      }
+    } catch (err) { console.error(err); }
+  };
+
+  const handleSaveSocials = async () => {
+    setSavingSocials(true);
+    try {
+      const res = await axios.post(`${backendUrl}/api/settings/update-social`, socials, { headers: { token } });
+      if (res.data?.success) toast.success(res.data.message);
+      else toast.error(res.data.message);
+    } catch(err) { toast.error(err.message); }
+    finally { setSavingSocials(false); }
+  };
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -124,6 +167,56 @@ const Dashboard = ({ token }) => {
         </p>
       </motion.div>
 
+      {/* ================= SETTINGS ================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        
+        {/* COD Toggle */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center"><Banknote size={20} /></div>
+            <div>
+              <h3 className="font-bold text-gray-800">Cash on Delivery (COD)</h3>
+              <p className="text-sm text-gray-500">Allow customers to pay physical cash</p>
+            </div>
+          </div>
+          <button
+            onClick={toggleCod}
+            className={`w-full py-3 rounded-lg font-bold tracking-wide transition-colors ${isCodEnabled ? 'bg-green-600 hover:bg-green-700 text-white shadow-md shadow-green-600/20' : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600'}`}
+          >
+            {isCodEnabled ? 'COD IS ACTIVE' : 'COD IS INACTIVE'}
+          </button>
+        </motion.div>
+
+        {/* Social Meta Links */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 bg-white rounded-xl shadow-sm border border-gray-100">
+           <div className="flex items-center justify-between mb-4">
+             <div className="flex items-center gap-3">
+               <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center"><Users size={20} /></div>
+               <div>
+                  <h3 className="font-bold text-gray-800">Global Configuration</h3>
+                  <p className="text-xs text-gray-500">Live Footer URIs & Meta</p>
+               </div>
+             </div>
+             <button onClick={handleSaveSocials} disabled={savingSocials} className="px-4 py-2 bg-black text-white text-xs font-bold rounded hover:bg-gray-800 transition">
+               {savingSocials ? 'SYNCING...' : 'SAVE DATA'}
+             </button>
+           </div>
+           
+           <div className="grid grid-cols-2 gap-3 mb-4">
+              <input placeholder="Store Phone" value={socials.phone} onChange={e => setSocials({...socials, phone: e.target.value})} className="w-full text-xs px-3 py-2 border border-gray-200 rounded outline-none focus:border-purple-500" />
+              <input placeholder="Store Email" value={socials.email} onChange={e => setSocials({...socials, email: e.target.value})} className="w-full text-xs px-3 py-2 border border-gray-200 rounded outline-none focus:border-purple-500" />
+           </div>
+
+           <div className="grid grid-cols-2 gap-3 border-t border-gray-100 pt-4">
+              <input placeholder="Instagram Link" value={socials.instagram} onChange={e => setSocials({...socials, instagram: e.target.value})} className="w-full text-xs px-3 py-2 border border-gray-200 rounded outline-none focus:border-purple-500" />
+              <input placeholder="Facebook Link" value={socials.facebook} onChange={e => setSocials({...socials, facebook: e.target.value})} className="w-full text-xs px-3 py-2 border border-gray-200 rounded outline-none focus:border-purple-500" />
+              <input placeholder="Twitter Link" value={socials.twitter} onChange={e => setSocials({...socials, twitter: e.target.value})} className="w-full text-xs px-3 py-2 border border-gray-200 rounded outline-none focus:border-purple-500" />
+              <input placeholder="YouTube Link" value={socials.youtube} onChange={e => setSocials({...socials, youtube: e.target.value})} className="w-full text-xs px-3 py-2 border border-gray-200 rounded outline-none focus:border-purple-500" />
+           </div>
+        </motion.div>
+
+      </div>
+
       {/* ================= STATS GRID ================= */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <StatCard
@@ -152,6 +245,13 @@ const Dashboard = ({ token }) => {
           value={stats.pendingOrders}
           icon={Clock}
           gradient="bg-gradient-to-br from-orange-500 to-amber-600"
+        />
+
+        <StatCard
+          title="COD Orders"
+          value={stats.codOrders}
+          icon={Banknote}
+          gradient="bg-gradient-to-br from-red-500 to-rose-700"
         />
 
         <StatCard

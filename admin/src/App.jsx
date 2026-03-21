@@ -96,6 +96,7 @@ import List from './pages/List'
 import Orders from './pages/Orders'
 import UserManagement from './pages/UserManagement'
 import AdminCoupons from './pages/AdminCoupon'
+import Admins from './pages/Admins'
 
 // ✅ NEW PAGES
 import Dashboard from './pages/Dashboard'
@@ -145,6 +146,7 @@ const App = () => {
                 <Route path="/orders" element={<Orders token={token} />} />
                 <Route path="/users" element={<UserManagement token={token} />} />
                 <Route path="/coupons" element={<AdminCoupons token={token} />} />
+                <Route path="/admins" element={<Admins token={token} />} />
               </Routes>
             </div>
           </div>

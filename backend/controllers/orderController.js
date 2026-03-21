@@ -21,37 +21,43 @@ const razorpayInstance = new razopay({
 
 // Placing Order using COD
 
+import settingsModel from "../models/settingsModel.js";
+
 const placeOrder = async (req, res) => {
+    try {
+        const settings = await settingsModel.findOne();
+        if (!settings || !settings.isCodEnabled) {
+            return res.json({ success: false, message: "Cash on Delivery is currently disabled by Admin." });
+        }
 
-    // try {
-    //     const { userId, items, amount, address } = req.body;
+        const { userId, items, amount, address } = req.body;
 
-    //     const orderData = {
-    //         userId,
-    //         items,
-    //         address,
-    //         amount,
-    //         paymentMethod :"COD",
-    //         payment:false,
-    //         date: Date.now()
+        const orderData = {
+            userId,
+            items,
+            address,
+            amount,
+            paymentMethod: "COD",
+            payment: false,
+            date: Date.now()
+        };
 
-    //     }
+        const newOrder = new orderModel(orderData);
+        await newOrder.save();
 
-    //     const newOrder = new orderModel(orderData)
-    //     await newOrder.save()
+        if (items) {
+            for (const item of items) {
+                await productModel.findByIdAndUpdate(item._id, { $inc: { stock: -item.quantity } });
+            }
+        }
 
-    //     await userModel.findByIdAndUpdate(userId,{cartData:{}})
+        await userModel.findByIdAndUpdate(userId, { cartData: {} });
 
-    //     res.json({success:true,message:'Order Placed'})
-
-
-    // } catch (error) {
-    //     console.log(error);
-    //     res.json({success:false,message:error.message})
-        
-
-    // }
-
+        res.json({ success: true, message: 'Order Placed successfully via COD!' });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
 }
 
 
@@ -114,8 +120,15 @@ const verifyRazorpay = async (req,res)=>{
         const {userId,razorpay_order_id} = req.body
         const orderInfo = await razorpayInstance.orders.fetch(razorpay_order_id)
         if(orderInfo.status==='paid'){
-            await orderModel.findByIdAndUpdate(orderInfo.receipt,{payment:true});
+            const order = await orderModel.findByIdAndUpdate(orderInfo.receipt,{payment:true});
             await userModel.findByIdAndUpdate(userId,{cartData:{}})
+            
+            if (order && order.items) {
+                for (const item of order.items) {
+                    await productModel.findByIdAndUpdate(item._id, { $inc: { stock: -item.quantity } });
+                }
+            }
+
             res.json({success:true,message:"Payment Successful"})
 
         } else {
@@ -233,12 +246,68 @@ const updateStatus = async (req, res) => {
       to: order.address.email, // Make sure email exists in order
       subject: `Order Status Updated - Order ID: ${order._id}`,
       html: `
-        <div style="font-family: sans-serif; color: #333;">
-          <h2>Hello ${order.address.firstName},</h2>
-          <p>Your order <strong>${order._id}</strong> status has been updated to:</p>
-          <h3 style="color: green;">${status}</h3>
-          <p>Thank you for shopping with <strong>WILD BEARS</strong>.</p>
-        </div>
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #faf9f7; color: #333333;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #faf9f7; padding: 40px 0;">
+          <tr>
+            <td align="center">
+              <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #eaeaea;">
+                
+                <!-- Header -->
+                <tr>
+                  <td align="center" style="padding: 40px 0; background-color: #111111;">
+                    <h1 style="margin: 0; color: #ffffff; font-size: 24px; letter-spacing: 4px; font-weight: 800; text-transform: uppercase;">WILDBEARS</h1>
+                    <p style="margin: 10px 0 0 0; color: #D8BF91; font-size: 12px; letter-spacing: 2px; text-transform: uppercase;">Network Fulfillment Update</p>
+                  </td>
+                </tr>
+
+                <!-- Content -->
+                <tr>
+                  <td align="left" style="padding: 50px 40px;">
+                    <h2 style="margin: 0 0 20px 0; font-size: 20px; color: #111111;">Hello ${order.address.firstName},</h2>
+                    <p style="margin: 0 0 30px 0; font-size: 15px; color: #666666; line-height: 1.6;">
+                      Your order lifecycle has advanced. We are writing to inform you that your purchase logistics have been successfully updated in our system.
+                    </p>
+                    
+                    <!-- Order Detail Box -->
+                    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f8f8; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+                      <tr>
+                        <td width="30%" style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #888888; padding-bottom: 10px;">Order Tracker ID</td>
+                        <td width="70%" style="font-family: monospace; font-size: 14px; color: #111111; padding-bottom: 10px; font-weight: bold;">${order._id}</td>
+                      </tr>
+                      <tr>
+                        <td width="30%" style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #888888;">Live Status</td>
+                        <td width="70%" style="font-size: 16px; color: #6B4E2E; font-weight: 900; letter-spacing: 0.5px;">${status}</td>
+                      </tr>
+                    </table>
+                    
+                    <p style="margin: 0; font-size: 14px; color: #888888; line-height: 1.6; text-align: center;">
+                      You can continue to track this trajectory natively via your client profile dashboard.<br><br>
+                      Thank you for trusting <strong>WILDBEARS™</strong>.
+                    </p>
+                  </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                  <td align="center" style="padding: 30px 40px; background-color: #faf9f7; border-top: 1px solid #eaeaea;">
+                     <p style="margin: 0; font-size: 12px; color: #888888; text-transform: uppercase; letter-spacing: 1px;">
+                      © ${new Date().getFullYear()} WILDBEARS INC. ALL RIGHTS RESERVED.
+                    </p>
+                  </td>
+                </tr>
+
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
       `,
     }
 

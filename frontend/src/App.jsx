@@ -14,6 +14,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import SearchBar from './components/SearchBar';
 import SplashScreen from './components/SplashScreen';
+import CouponBanner from './components/CouponBanner';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -33,6 +34,7 @@ const App = () => {
     <div className="min-h-screen flex flex-col">
       <ToastContainer />
 
+      <CouponBanner />
       {/* NAVBAR (full width) */}
       <Navbar />
       <SearchBar />

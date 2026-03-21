@@ -21,7 +21,7 @@ const Orders = () => {
         let allOrdersItem = [];
 
         response.data.orders.forEach((order) => {
-          if (order.payment === false) return;
+          if (order.payment === false && order.paymentMethod !== "COD") return;
 
           order.items.forEach((item) => {
             item.status = order.status;

@@ -20,6 +20,7 @@ const addProducts = async (req, res) => {
       isPreOrder,
       preOrderAvailableDate,
       maxPreOrderQty,
+      stock,
     } = req.body;
 
     const image1 = req.files.image1 && req.files.image1[0];
@@ -47,6 +48,7 @@ const addProducts = async (req, res) => {
       actualPrice: Number(actualPrice),
       price: Number(price),
       bestseller: bestseller === 'true',
+      stock: Number(stock) || 0,
       isPreOrder: isPreOrder === 'true',
       preOrderAvailableDate: isPreOrder === 'true' ? new Date(preOrderAvailableDate) : null,
       maxPreOrderQty: isPreOrder === 'true' ? Number(maxPreOrderQty) || null : null,
@@ -116,6 +118,7 @@ const updateProduct = async (req, res) => {
       preOrderAvailableDate,
       maxPreOrderQty,
       existingImages,
+      stock,
     } = req.body;
 
     const product = await productModel.findById(_id);
@@ -152,6 +155,7 @@ const updateProduct = async (req, res) => {
 
     if (price !== undefined) product.price = Number(price);
     if (actualPrice !== undefined) product.actualPrice = Number(actualPrice);
+    if (stock !== undefined) product.stock = Number(stock);
 
     product.isPreOrder = isPreOrder === "true" || isPreOrder === true;
 

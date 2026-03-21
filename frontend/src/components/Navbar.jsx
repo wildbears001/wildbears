@@ -64,10 +64,9 @@ const Navbar = () => {
                     key={path}
                     to={path}
                     className={({ isActive }) =>
-                      `font-bold transition-colors ${
-                        isActive
-                          ? 'text-[#4A2F1A]'
-                          : 'hover:text-[#4A2F1A]'
+                      `font-bold transition-colors ${isActive
+                        ? 'text-[#4A2F1A]'
+                        : 'hover:text-[#4A2F1A]'
                       }`
                     }
                   >
@@ -93,26 +92,26 @@ const Navbar = () => {
             {/* Profile */}
             <div className="relative group">
               <img
-  src={assets.profile_icon}
-  alt="profile"
-  className={`w-5 cursor-pointer ${brownIcon}`}
-  onClick={() => {
-    if (token) {
-      navigate('/profile')   // ✅ mobile + desktop
-    } else {
-      navigate('/login')
-    }
-  }}
-/>
+                src={assets.profile_icon}
+                alt="profile"
+                className={`w-5 cursor-pointer ${brownIcon}`}
+                onClick={() => {
+                  if (token) {
+                    navigate('/profile')   // ✅ mobile + desktop
+                  } else {
+                    navigate('/login')
+                  }
+                }}
+              />
 
 
               {token && (
                 <div className="absolute right-0 top-full hidden group-hover:block pt-2">
                   <div className="flex flex-col gap-2 w-36 py-3 px-5 bg-slate-100 text-gray-500 rounded shadow-lg">
-                    <p 
-                            onClick={() => navigate('/profile')}
+                    <p
+                      onClick={() => navigate('/profile')}
 
-                    className="cursor-pointer hover:text-black">My Profile</p>
+                      className="cursor-pointer hover:text-black">My Profile</p>
                     <p
                       onClick={() => navigate('/orders')}
                       className="cursor-pointer hover:text-black"

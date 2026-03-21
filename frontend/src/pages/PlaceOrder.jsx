@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Title from '../components/Title';
 import { assets } from '../assets/assets';
 import { ShopContext } from '../context/ShopContext';
@@ -10,7 +10,13 @@ const PlaceOrder = () => {
   const [method, setMethod] = useState("razorpay");
   const [loading, setLoading] = useState(false);
   const [couponLoading, setCouponLoading] = useState(false);
+  const [isCodEnabled, setIsCodEnabled] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const isBuyNow = searchParams.get('buyNow') === 'true';
+  const buyProductId = searchParams.get('productId');
+  const buySize = searchParams.get('size');
 
   const {
     backendUrl,
@@ -22,6 +28,22 @@ const PlaceOrder = () => {
     products
   } = useContext(ShopContext);
 
+  /* ================= FETCH SETTINGS ================= */
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await axios.get(`${backendUrl}/api/settings/get`);
+        if (res.data?.success) {
+          setIsCodEnabled(res.data.settings.isCodEnabled);
+        }
+      } catch (err) {
+        console.error("Failed to load settings:", err);
+      }
+    };
+    fetchSettings();
+  }, [backendUrl]);
+
+
   /* ================= AUTH CHECK ================= */
   useEffect(() => {
     if (!token) {
@@ -32,66 +54,100 @@ const PlaceOrder = () => {
 
   if (!token) return null;
 
-  /* ================= FORM ================= */
+  /* ================= FORM & SAVED ADDRESSES ================= */
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '',
     street: '', city: '', state: '',
     pincode: '', country: '', phone: ''
   });
 
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [saveAddressEnabled, setSaveAddressEnabled] = useState(false);
+  const [addressName, setAddressName] = useState('');
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
+      setSavedAddresses(stored);
+    } catch(e) {}
+  }, []);
+
+  const handleSelectAddress = (addr) => {
+    setFormData(addr);
+    toast.info(`Selected address: ${addr.addressName}`);
+  };
+
+  const onChangeHandler = (e) =>
+    setFormData(d => ({ ...d, [e.target.name]: e.target.value }));
+
+  /* ================= COUPONS ================= */
   const [couponCode, setCouponCode] = useState('');
   const [couponData, setCouponData] = useState(null);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [couponError, setCouponError] = useState('');
 
-  const onChangeHandler = (e) =>
-    setFormData(d => ({ ...d, [e.target.name]: e.target.value }));
+  /* ================= DATA COMPUTATION ================= */
+  const buyNowProduct = isBuyNow ? products.find(p => p._id === buyProductId) : null;
+  const subTotal = buyNowProduct ? buyNowProduct.price : getCartAmount();
 
-  /* ================= APPLY COUPON (BACKEND) ================= */
-  const applyCoupon = async () => {
-  if (!couponCode.trim()) {
-    toast.error("Enter coupon code");
-    return;
-  }
-
-  try {
-    setCouponLoading(true);
-    setCouponError("");
-
-    const orderAmount = getCartAmount();
-
-    const res = await axios.post(
-      `${backendUrl}/api/coupons/apply`,
-      {
-        code: couponCode.trim(),
-        orderAmount
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
+  const getOrderItemsList = () => {
+    if (isBuyNow && buyNowProduct) {
+      const p = structuredClone(buyNowProduct);
+      p.size = buySize;
+      p.quantity = 1;
+      return [p];
+    }
+    const items = [];
+    for (const id in cartItems) {
+      for (const size in cartItems[id]) {
+        if (cartItems[id][size] > 0) {
+          const product = structuredClone(products.find(p => p._id === id));
+          if (product) {
+            product.size = size;
+            product.quantity = cartItems[id][size];
+            items.push(product);
+          }
         }
       }
-    );
+    }
+    return items;
+  };
 
-    if (res.data.success) {
-      setCouponData({ code: res.data.code });
-      setDiscountAmount(res.data.discount);
-      toast.success(res.data.message);
+  const orderItems = getOrderItemsList();
+
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) {
+      toast.error("Enter coupon code");
+      return;
     }
 
-  } catch (err) {
-    const msg = err.response?.data?.message || "Invalid coupon";
-    setCouponError(msg);
-    setCouponData(null);
-    setDiscountAmount(0);
-    toast.error(msg);
-  } finally {
-    setCouponLoading(false);
-  }
-};
+    try {
+      setCouponLoading(true);
+      setCouponError("");
 
+      const res = await axios.post(
+        `${backendUrl}/api/coupons/apply`,
+        { code: couponCode.trim(), orderAmount: subTotal },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-  /* ================= RAZORPAY ================= */
+      if (res.data.success) {
+        setCouponData({ code: res.data.code });
+        setDiscountAmount(res.data.discount);
+        toast.success(res.data.message);
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || "Invalid coupon";
+      setCouponError(msg);
+      setCouponData(null);
+      setDiscountAmount(0);
+      toast.error(msg);
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  /* ================= PAYMENT ================= */
   const initPay = (order) => {
     const options = {
       key: import.meta.env.VITE_RAZORPAY_KEY_ID,
@@ -109,7 +165,7 @@ const PlaceOrder = () => {
           );
 
           if (res.data.success) {
-            setCartItems({});
+            if (!isBuyNow) setCartItems({});
             toast.success("Payment successful");
             navigate("/orders");
           } else {
@@ -136,35 +192,21 @@ const PlaceOrder = () => {
   const onSubmitHandler = async (e) => {
     e.preventDefault();
 
-    const hasItems = Object.keys(cartItems).some(id =>
-      Object.values(cartItems[id]).some(qty => qty > 0)
-    );
-
-    if (!hasItems) {
-      toast.error("Cart is empty");
+    if (orderItems.length === 0) {
+      toast.error(isBuyNow ? "Product not found" : "Cart is empty");
       return;
     }
 
+    // Save Address Logic
+    if (saveAddressEnabled && addressName.trim()) {
+      const newSaved = [...savedAddresses, { ...formData, addressName: addressName.trim() }];
+      setSavedAddresses(newSaved);
+      localStorage.setItem('savedAddresses', JSON.stringify(newSaved));
+      toast.success("Address saved locally for future use!");
+    }
+
     try {
-      let orderItems = [];
-
-      for (const id in cartItems) {
-        for (const size in cartItems[id]) {
-          if (cartItems[id][size] > 0) {
-            const product = structuredClone(products.find(p => p._id === id));
-            if (product) {
-              product.size = size;
-              product.quantity = cartItems[id][size];
-              orderItems.push(product);
-            }
-          }
-        }
-      }
-
-      const totalAmount = Math.max(
-        0,
-        getCartAmount() + delivery_fee - discountAmount
-      );
+      const totalAmount = Math.max(0, subTotal + delivery_fee + (method === "cod" ? 100 : 0) - discountAmount - (method === "razorpay" ? 50 : 0));
 
       const orderData = {
         address: formData,
@@ -174,91 +216,152 @@ const PlaceOrder = () => {
         discount: discountAmount
       };
 
-      if (method !== "razorpay") {
-        toast.error("Only Razorpay is supported");
-        return;
-      }
-
       setLoading(true);
 
-      const res = await axios.post(
-        `${backendUrl}/api/order/razorpay`,
-        orderData,
-        { headers: { token } }
-      );
+      if (method === "razorpay") {
+        const res = await axios.post(
+          `${backendUrl}/api/order/razorpay`,
+          orderData,
+          { headers: { token } }
+        );
 
-      if (res.data.success) {
-        initPay(res.data.order);
+        if (res.data.success) {
+          initPay(res.data.order);
+        } else {
+          toast.error(res.data.message || "Payment initialization failed");
+          setLoading(false);
+        }
+      } else if (method === "cod") {
+        if (!isCodEnabled) {
+          toast.error("Cash on Delivery is currently disabled.");
+          setLoading(false);
+          return;
+        }
+
+        const res = await axios.post(
+            `${backendUrl}/api/order/place`,
+            orderData,
+            { headers: { token } }
+        );
+        if (res.data.success) {
+            if (!isBuyNow) setCartItems({});
+            toast.success("Order Placed Successfully via COD");
+            navigate("/orders");
+        } else {
+            toast.error(res.data.message || "Failed to place COD order");
+            setLoading(false);
+        }
+
       } else {
-        toast.error("Payment initialization failed");
+        toast.error("Only Razorpay or COD is supported right now");
         setLoading(false);
       }
 
     } catch (err) {
-      toast.error(err.message);
+      toast.error(err.response?.data?.message || err.message);
       setLoading(false);
     }
   };
 
   /* ================= UI ================= */
   return (
-    <form onSubmit={onSubmitHandler} className="min-h-screen pt-10 bg-[#faf9f7]">
-      <div className="max-w-6xl mx-auto px-4 grid lg:grid-cols-2 gap-10">
+    <form onSubmit={onSubmitHandler} className="min-h-screen pt-10 pb-20 bg-[#faf9f7]">
+      <div className="max-w-7xl mx-auto px-4 grid lg:grid-cols-2 gap-10">
 
-        {/* DELIVERY */}
-        <section className="bg-white p-8 rounded-2xl border">
-          <Title text1="DELIVERY" text2="DETAILS" />
-          <div className="grid sm:grid-cols-2 gap-5 mt-8">
-            {[
-              ['firstName','First name'],['lastName','Last name'],
-              ['email','Email'],['phone','Phone'],
-              ['street','Street'],['city','City'],
-              ['state','State'],['pincode','Pin code'],
-              ['country','Country']
-            ].map(([k,l]) => (
-              <input
-                key={k}
-                name={k}
-                required
-                value={formData[k]}
-                onChange={onChangeHandler}
-                placeholder={l}
-                className="border rounded-xl px-4 py-3"
-              />
-            ))}
-          </div>
-        </section>
-
-        {/* RIGHT */}
-        <section className="space-y-8">
-
-          {/* SUMMARY */}
-          <div className="bg-white p-8 rounded-2xl border">
-            <h3 className="font-semibold mb-4">Order Summary</h3>
-
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>₹{getCartAmount()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Delivery</span>
-                <span>₹{delivery_fee}</span>
-              </div>
-
-              {couponData && (
-                <div className="flex justify-between text-green-600">
-                  <span>Discount ({couponData.code})</span>
-                  <span>-₹{discountAmount}</span>
+        {/* LEFT COLUMN */}
+        <div className="space-y-8">
+          
+          {/* AVAILABLE SAVED ADDRESSES */}
+          {savedAddresses.length > 0 && (
+             <section className="bg-white p-6 sm:p-8 rounded-2xl border">
+                <Title text1="SAVED" text2="ADDRESSES" />
+                <div className="flex gap-4 overflow-x-auto mt-4 pb-2">
+                  {savedAddresses.map((addr, idx) => (
+                    <div 
+                      key={idx} 
+                      onClick={() => handleSelectAddress(addr)}
+                      className="min-w-[200px] border border-gray-200 p-4 rounded-xl cursor-pointer hover:border-[#6B4E2E] bg-gray-50 flex flex-col justify-between"
+                    >
+                      <div>
+                        <h4 className="font-semibold text-[#6B4E2E] flex items-center gap-2">📍 {addr.addressName}</h4>
+                        <p className="text-sm mt-2 text-gray-700">{addr.street}, {addr.city}</p>
+                      </div>
+                      <span className="text-xs text-blue-600 mt-3 hover:underline">Select Address →</span>
+                    </div>
+                  ))}
                 </div>
-              )}
+             </section>
+          )}
 
-              <div className="flex justify-between font-bold border-t pt-3">
-                <span>Total</span>
-                <span>
-                  ₹{Math.max(0, getCartAmount() + delivery_fee - discountAmount)}
-                </span>
-              </div>
+          {/* DELIVERY */}
+          <section className="bg-white p-6 sm:p-8 rounded-2xl border">
+            <Title text1="DELIVERY" text2="DETAILS" />
+            
+            <div className="grid sm:grid-cols-2 gap-5 mt-8">
+              {[
+                ['firstName','First name'],['lastName','Last name'],
+                ['email','Email'],['phone','Phone'],
+                ['street','Street'],['city','City'],
+                ['state','State'],['pincode','Pin code'],
+                ['country','Country']
+              ].map(([k,l]) => (
+                <input
+                  key={k} name={k} required value={formData[k]}
+                  onChange={onChangeHandler} placeholder={l}
+                  className="border border-gray-200 bg-gray-50 rounded-xl px-4 py-3 focus:ring-1 focus:ring-[#6B4E2E] outline-none"
+                />
+              ))}
+            </div>
+
+            {/* SAVE THIS ADDRESS CHECKBOX */}
+            <div className="mt-8 border-t pt-6">
+               <label className="flex items-center gap-3 cursor-pointer select-none">
+                 <input 
+                   type="checkbox" 
+                   className="w-5 h-5 accent-[#6B4E2E]"
+                   checked={saveAddressEnabled}
+                   onChange={(e) => setSaveAddressEnabled(e.target.checked)}
+                 />
+                 <span className="text-md text-gray-800">Save this address for future checkouts</span>
+               </label>
+               
+               {saveAddressEnabled && (
+                 <div className="mt-4 animate-fade-in">
+                   <input
+                     name="addressName"
+                     value={addressName}
+                     required={saveAddressEnabled}
+                     onChange={(e) => setAddressName(e.target.value)}
+                     placeholder="Name this address (e.g. Home, Office, Studio)"
+                     className="w-full border border-gray-200 bg-gray-50 rounded-xl px-4 py-3 focus:ring-1 focus:ring-[#6B4E2E] outline-none max-w-sm"
+                   />
+                 </div>
+               )}
+            </div>
+
+          </section>
+        </div>
+
+        {/* RIGHT COLUMN */}
+        <section className="space-y-6">
+
+          {/* ITEM OVERVIEW LIST */}
+          <div className="bg-white p-6 rounded-2xl border">
+            <Title text1="PURCHASE" text2="ITEMS" />
+            <div className="mt-4 space-y-4 max-h-[300px] overflow-y-auto pr-2">
+               {orderItems.map((item, idx) => (
+                 <div key={idx} className="flex gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100 items-center">
+                    <img src={item.image?.[0] || assets.hero_image} className="w-16 h-16 object-cover rounded shadow-sm" alt="product"/>
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-800 line-clamp-1">{item.name}</p>
+                      <p className="text-sm text-gray-500 mt-1">Size: <b>{item.size}</b> | Qty: <b>{item.quantity}</b></p>
+                    </div>
+                    <div>
+                      <p className="font-bold text-[#6B4E2E]">₹{item.price * item.quantity}</p>
+                    </div>
+                 </div>
+               ))}
+               {orderItems.length === 0 && <p className="text-gray-400 italic">No items identified.</p>}
             </div>
           </div>
 
@@ -269,14 +372,14 @@ const PlaceOrder = () => {
               <input
                 value={couponCode}
                 onChange={(e) => setCouponCode(e.target.value)}
-                placeholder="Enter coupon"
-                className="flex-1 border rounded-xl px-4 py-3"
+                placeholder="Enter coupon code here..."
+                className="flex-1 border bg-gray-50 rounded-xl px-4 py-3 outline-none focus:ring-1 focus:ring-[#6B4E2E]"
               />
               <button
                 type="button"
                 onClick={applyCoupon}
                 disabled={couponLoading}
-                className="bg-[#6B4E2E] text-white px-6 py-3 rounded-xl"
+                className="bg-[#6B4E2E] text-white px-6 py-3 rounded-xl hover:bg-[#5a4225] transition"
               >
                 {couponLoading ? "APPLYING..." : "Apply"}
               </button>
@@ -284,34 +387,80 @@ const PlaceOrder = () => {
             {couponError && <p className="text-red-500 text-sm mt-2">{couponError}</p>}
           </div>
 
+          {/* SUMMARY */}
+          <div className="bg-white p-6 rounded-2xl border">
+             <Title text1="ORDER" text2="SUMMARY" />
+            <div className="space-y-3 mt-5 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Subtotal</span>
+                <span className="font-medium">₹{subTotal}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Delivery Fee</span>
+                <span className="font-medium">₹{delivery_fee}</span>
+              </div>
+              
+              {method === 'cod' && (
+                <div className="flex justify-between text-orange-600 bg-orange-50 p-2 rounded">
+                  <span>COD Handling Fee</span>
+                  <span className="font-bold">+₹100</span>
+                </div>
+              )}
+
+              {method === 'razorpay' && (
+                <div className="flex justify-between text-green-600 bg-green-50 p-2 rounded">
+                  <span>Razorpay Instant Discount</span>
+                  <span className="font-bold">-₹50</span>
+                </div>
+              )}
+
+              {couponData && (
+                <div className="flex justify-between text-green-600 bg-green-50 p-2 rounded">
+                  <span>Discount ({couponData.code})</span>
+                  <span className="font-bold">-₹{discountAmount}</span>
+                </div>
+              )}
+
+              <div className="flex justify-between font-bold text-xl border-t pt-4 mt-2">
+                <span>Total</span>
+                <span className="text-[#6B4E2E]">
+                  ₹{Math.max(0, subTotal + delivery_fee + (method === "cod" ? 100 : 0) - discountAmount - (method === "razorpay" ? 50 : 0))}
+                </span>
+              </div>
+            </div>
+          </div>
+
           {/* PAYMENT */}
           <div className="bg-white p-6 rounded-2xl border">
             <Title text1="PAYMENT" text2="METHOD" />
 
-            <div className="grid sm:grid-cols-3 gap-4 mt-6">
-              {['stripe', 'razorpay', 'cod'].map(m => (
-                <div
-                  key={m}
-                  onClick={() => setMethod(m)}
-                  className={`border p-4 rounded-xl cursor-pointer
-                    ${method === m ? 'bg-[#6B4E2E]/10 border-[#6B4E2E]' : ''}`}
-                >
-                  {m === 'cod'
-                    ? "Cash on Delivery"
-                    : <img src={m === 'stripe' ? assets.stripe_logo : assets.razorpay_logo} className="h-6" />}
+            <div className="grid sm:grid-cols-2 gap-4 mt-6">
+              <div
+                onClick={() => setMethod('razorpay')}
+                className={`border p-4 rounded-xl cursor-pointer flex items-center justify-center transition
+                  ${method === 'razorpay' ? 'bg-[#6B4E2E]/10 border-[#6B4E2E]' : 'hover:bg-gray-50'}`}
+              >
+                <img src={assets.razorpay_logo} className="h-6" alt="razorpay" />
+              </div>
+
+              <div
+                onClick={() => isCodEnabled ? setMethod('cod') : toast.error("COD is disabled")}
+                className={`border p-4 rounded-xl flex items-center justify-center transition
+                  ${method === 'cod' ? 'bg-[#6B4E2E]/10 border-[#6B4E2E]' : 'hover:bg-gray-50'}
+                  ${!isCodEnabled ? 'opacity-50 cursor-not-allowed bg-gray-100 block' : 'cursor-pointer'}`}
+              >
+                <div className="flex flex-col items-center">
+                   <p className="font-medium text-gray-800">Cash on Delivery</p>
+                   {!isCodEnabled && <span className="text-xs text-red-500 mt-1">Currently Disabled</span>}
                 </div>
-              ))}
+              </div>
             </div>
 
-            <p className="text-red-500 text-sm mt-4">
-              * Only Razorpay is enabled , COD is Disabled
-            </p>
-
-            <div className="text-right mt-6">
+            <div className="mt-8">
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-[#6B4E2E] text-white px-20 py-4 rounded-2xl"
+                className="w-full bg-[#6B4E2E] text-white px-8 py-4 rounded-xl font-bold tracking-wide hover:bg-[#5a4225] transition disabled:opacity-70 disabled:cursor-not-allowed shadow-md shadow-[#6B4E2E]/20"
               >
                 {loading ? "PROCESSING..." : "PLACE ORDER"}
               </button>

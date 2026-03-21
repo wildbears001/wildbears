@@ -6,7 +6,8 @@ export const getDashboardStats = async (req, res) => {
   try {
     const totalOrders = await Order.countDocuments();
     const paidOrders = await Order.countDocuments({ payment: true });
-    const pendingOrders = await Order.countDocuments({ payment: false });
+    const pendingOrders = await Order.countDocuments({ payment: false, paymentMethod: { $ne: "COD" } });
+    const codOrders = await Order.countDocuments({ paymentMethod: "COD" });
     const preOrders = await Order.countDocuments({ "items.isPreOrder": true });
 
     const totalUsers = await User.countDocuments();
@@ -26,6 +27,7 @@ export const getDashboardStats = async (req, res) => {
         totalOrders,
         paidOrders,
         pendingOrders,
+        codOrders,
         preOrders,
         totalUsers,
         totalProducts
