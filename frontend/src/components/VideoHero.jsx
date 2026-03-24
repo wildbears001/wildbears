@@ -1,15 +1,21 @@
-import React, { useRef } from "react";
+import React, { useRef, useContext } from "react";
 import { assets } from "../assets/assets";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-
-const videos = [
-  assets.v1,
-  assets.v2,
-  assets.v3,
-];
+import { ShopContext } from "../context/ShopContext";
 
 const VideoHero = () => {
+  const { uiElements } = useContext(ShopContext);
   const sliderRef = useRef(null);
+
+  const videoElements = uiElements ? uiElements.filter(el => el.section === 'video') : [];
+
+  const slides = videoElements.length > 0
+    ? videoElements
+    : [
+        { resourceType: "video", mediaUrl: assets.v1 },
+        { resourceType: "video", mediaUrl: assets.v2 },
+        { resourceType: "video", mediaUrl: assets.v3 },
+      ];
 
   const scroll = (direction) => {
     if (!sliderRef.current) return;
@@ -50,24 +56,33 @@ const VideoHero = () => {
         ref={sliderRef}
         className="flex w-full overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide"
       >
-        {videos.map((video, index) => (
+        {slides.map((item, index) => (
           <div
             key={index}
             className="w-full flex-shrink-0 h-[70vh] sm:h-[90vh] snap-start relative bg-black"
           >
-            {/* VIDEO */}
-            <video
-              src={video}
-              autoPlay
-              muted
-              loop
-              playsInline
-              className="
-                w-full h-full
-                object-cover        /* 📱 Mobile */
-                sm:object-contain   /* 💻 Desktop */
-              "
-            />
+            {/* MEDIA */}
+            {item.resourceType === "video" ? (
+              <video
+                src={item.mediaUrl}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="
+                  w-full h-full
+                  object-cover        /* 📱 Mobile */
+                  sm:object-contain   /* 💻 Desktop */
+                "
+              />
+            ) : (
+              <img
+                src={item.mediaUrl}
+                alt={`video-hero-${index + 1}`}
+                draggable="false"
+                className="w-full h-full object-cover sm:object-contain"
+              />
+            )}
 
             {/* TEXT OVERLAY */}
             <div className="absolute inset-0 flex items-center bg-black/30 pointer-events-none">

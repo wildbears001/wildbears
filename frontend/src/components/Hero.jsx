@@ -1,19 +1,25 @@
-import React, { useRef } from "react";
+import React, { useRef, useContext } from "react";
 import { assets } from "../assets/assets";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-
-const banners = [
-  assets.b1,
-  assets.b2,
-  assets.b3,
-  assets.b4,
-  assets.b5,
-  assets.b6,
-  assets.b7,
-];
+import { ShopContext } from "../context/ShopContext";
 
 const Hero = () => {
+  const { uiElements } = useContext(ShopContext);
   const sliderRef = useRef(null);
+  
+  const heroElements = uiElements ? uiElements.filter(el => el.section === 'hero') : [];
+  
+  const banners = heroElements.length > 0 
+    ? heroElements 
+    : [
+        { resourceType: "image", mediaUrl: assets.b1 },
+        { resourceType: "image", mediaUrl: assets.b2 },
+        { resourceType: "image", mediaUrl: assets.b3 },
+        { resourceType: "image", mediaUrl: assets.b4 },
+        { resourceType: "image", mediaUrl: assets.b5 },
+        { resourceType: "image", mediaUrl: assets.b6 },
+        { resourceType: "image", mediaUrl: assets.b7 },
+      ];
 
   const scroll = (direction) => {
     if (!sliderRef.current) return;
@@ -56,22 +62,29 @@ const Hero = () => {
         ref={sliderRef}
         className="flex w-full overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide"
       >
-        {banners.map((img, index) => (
+        {banners.map((item, index) => (
           <div
             key={index}
             className="w-full flex-shrink-0 h-[70vh] sm:h-[90vh] snap-start relative bg-black"
           >
-            {/* IMAGE */}
-            <img
-              src={img}
-              alt={`banner-${index + 1}`}
-              draggable="false"
-              className="
-                w-full h-full
-                object-cover
-                sm:object-contain
-              "
-            />
+            {/* MEDIA */}
+            {item.resourceType === "video" ? (
+              <video
+                src={item.mediaUrl}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full h-full object-cover sm:object-contain"
+              />
+            ) : (
+              <img
+                src={item.mediaUrl}
+                alt={`banner-${index + 1}`}
+                draggable="false"
+                className="w-full h-full object-cover sm:object-contain"
+              />
+            )}
 
             {/* TEXT OVERLAY */}
             <div className="absolute inset-0 flex items-center bg-black/30">

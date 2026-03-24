@@ -143,11 +143,10 @@ const Product = () => {
                   setSelectedImage(img);
                   setCurrentIndex(idx);
                 }}
-                className={`w-20 h-20 sm:w-full sm:h-auto object-cover rounded cursor-pointer border ${
-                  selectedImage === img
+                className={`w-20 h-20 sm:w-full sm:h-auto object-cover rounded cursor-pointer border ${selectedImage === img
                     ? 'border-[#6B4E2E]'
                     : 'border-transparent'
-                }`}
+                  }`}
               />
             ))}
           </div>
@@ -215,11 +214,10 @@ const Product = () => {
                 <button
                   key={size}
                   onClick={() => setSelectedSize(size)}
-                  className={`border px-4 py-2 rounded ${
-                    selectedSize === size
+                  className={`border px-4 py-2 rounded ${selectedSize === size
                       ? 'bg-[#6B4E2E] text-white'
                       : 'bg-[#EFE2C6]'
-                  }`}
+                    }`}
                 >
                   {size}
                 </button>
@@ -240,7 +238,7 @@ const Product = () => {
             >
               Buy Now
             </button >
-            <SizeChart  />
+            <SizeChart />
           </div>
 
           <hr className="mt-8" />

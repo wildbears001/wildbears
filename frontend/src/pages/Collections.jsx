@@ -274,17 +274,15 @@ const Collections = () => {
           Filters
           <img
             src={assets.dropdown_icons}
-            className={`h-3 sm:hidden transition-transform duration-300 ${
-              showFilter ? 'rotate-90' : ''
-            }`}
+            className={`h-3 sm:hidden transition-transform duration-300 ${showFilter ? 'rotate-90' : ''
+              }`}
             alt=""
           />
         </p>
 
         <div
-          className={`transition-all duration-300 ${
-            showFilter ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
-          } sm:max-h-full sm:opacity-100 overflow-hidden`}
+          className={`transition-all duration-300 ${showFilter ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
+            } sm:max-h-full sm:opacity-100 overflow-hidden`}
         >
           {/* CATEGORY */}
           <div className="bg-[#EFE2C6] rounded-xl shadow-sm p-5 mt-4">

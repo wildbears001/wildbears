@@ -1,6 +1,6 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, PlusSquare, ListTodo, PackageSearch, Users, TicketPercent, BarChart4, ShieldCheck } from 'lucide-react'
+import { LayoutDashboard, PlusSquare, ListTodo, PackageSearch, Users, TicketPercent, BarChart4, ShieldCheck, MonitorPlay } from 'lucide-react'
 
 const Sidebar = () => {
   const routes = [
@@ -12,6 +12,7 @@ const Sidebar = () => {
     { name: 'Coupons', path: '/coupons', icon: TicketPercent },
     { name: 'Analytics', path: '/analytics', icon: BarChart4 },
     { name: 'Admin Roles', path: '/admins', icon: ShieldCheck },
+    { name: 'Frontend Content', path: '/ui-elements', icon: MonitorPlay },
   ];
 
   return (

@@ -86,11 +86,12 @@
 // export default ShopByCategory;
 
 
-import React from "react";
+import React, { useContext } from "react";
 import { assets } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
+import { ShopContext } from "../context/ShopContext";
 
-const categories = [
+const defaultCategories = [
   {
     name: "SHIRTS",
     image: assets.category_shirt,
@@ -114,7 +115,14 @@ const categories = [
 ];
 
 const ShopByCategory = () => {
+  const { uiElements } = useContext(ShopContext);
   const navigate = useNavigate();
+
+  const categoryElements = uiElements ? uiElements.filter(el => el.section === 'category') : [];
+
+  const categories = categoryElements.length > 0
+    ? categoryElements.map(el => ({ name: el.title, image: el.mediaUrl, subCategory: el.subCategory, resourceType: el.resourceType }))
+    : defaultCategories;
 
   const handleClick = (subCategory) => {
     navigate("/collections", {
@@ -143,21 +151,40 @@ const ShopByCategory = () => {
             onClick={() => handleClick(cat.subCategory)}
             className="text-center cursor-pointer group"
           >
-            {/* Image */}
+            {/* MEDIA */}
             <div className="overflow-hidden rounded-sm">
-              <img
-                src={cat.image}
-                alt={cat.name}
-                className="
-                  w-full h-[220px]
-                  sm:h-[300px]
-                  md:h-[360px]
-                  lg:h-[420px]
-                  object-cover
-                  transition-transform duration-500
-                  group-hover:scale-105
-                "
-              />
+              {cat.resourceType === "video" ? (
+                <video
+                  src={cat.image}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="
+                    w-full h-[220px]
+                    sm:h-[300px]
+                    md:h-[360px]
+                    lg:h-[420px]
+                    object-cover
+                    transition-transform duration-500
+                    group-hover:scale-105
+                  "
+                />
+              ) : (
+                <img
+                  src={cat.image}
+                  alt={cat.name}
+                  className="
+                    w-full h-[220px]
+                    sm:h-[300px]
+                    md:h-[360px]
+                    lg:h-[420px]
+                    object-cover
+                    transition-transform duration-500
+                    group-hover:scale-105
+                  "
+                />
+              )}
             </div>
 
             {/* Category Name */}

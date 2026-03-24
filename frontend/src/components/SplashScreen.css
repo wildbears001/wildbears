@@ -3,7 +3,8 @@
   inset: 0;
 
   /* ✅ White with light black shade */
-  background: #f5f5f5; /* soft off-white */
+  background: #ffffff;
+  /* soft off-white */
 
   display: flex;
   align-items: center;

@@ -18,6 +18,7 @@ import adminDashboardRoutes from "./routes/adminDashboardRoutes.js";
 import adminAnalyticsRoutes from "./routes/adminAnalyticsRoutes.js";
 import settingsRoute from "./routes/settingsRoute.js";
 import adminManagerRoute from "./routes/adminManagerRoute.js";
+import uiRouter from "./routes/uiRoute.js";
 
 
 
@@ -62,6 +63,7 @@ app.use("/api/admin/dashboard", adminDashboardRoutes);
 app.use("/api/adminAnalytics", adminAnalyticsRoutes);
 app.use("/api/settings", settingsRoute);
 app.use("/api/admin", adminManagerRoute);
+app.use("/api/ui", uiRouter);
 
 
 app.get('/',(req,res)=>{

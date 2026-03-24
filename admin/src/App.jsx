@@ -4,19 +4,6 @@
 
 // import { Routes, Route } from 'react-router-dom'
 // import Add from './pages/Add'
-// import List from './pages/List'
-// import Orders from './pages/Orders'
-// import { useState } from 'react'
-// import Login from './components/Login'
-// import { ToastContainer } from 'react-toastify';
-// import UserManagement from "./pages/UserManagement"; // ✅ Import
-// import AdminCoupons from './pages/AdminCoupon'
-
-
-
-
-
-
 // // export const backendUrl = import.meta.env.VITE_BACKEND_URL
 // export const backendUrl =
 //   import.meta.env.VITE_BACKEND_URL?.trim()
@@ -101,6 +88,7 @@ import Admins from './pages/Admins'
 // ✅ NEW PAGES
 import Dashboard from './pages/Dashboard'
 import Analytics from './pages/Analytics'
+import UIElements from './pages/UIElements'
 
 // ================= BACKEND URL =================
 export const backendUrl =
@@ -147,6 +135,7 @@ const App = () => {
                 <Route path="/users" element={<UserManagement token={token} />} />
                 <Route path="/coupons" element={<AdminCoupons token={token} />} />
                 <Route path="/admins" element={<Admins token={token} />} />
+                <Route path="/ui-elements" element={<UIElements token={token} />} />
               </Routes>
             </div>
           </div>
