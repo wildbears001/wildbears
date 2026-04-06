@@ -19,7 +19,7 @@ import React from "react";
 import "./SplashScreen.css";
 import splashVideo from "../assets/preloader.mp4"; // ✅ your MP4 file
 
-const SplashScreen = () => {
+const SplashScreen = ({ onComplete }) => {
   return (
     <div className="splash-screen">
       <video
@@ -29,6 +29,8 @@ const SplashScreen = () => {
         muted
         playsInline
         preload="auto"
+        onEnded={onComplete}
+        onError={onComplete}
       />
     </div>
   );

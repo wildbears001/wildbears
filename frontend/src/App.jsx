@@ -21,14 +21,7 @@ import 'react-toastify/dist/ReactToastify.css';
 const App = () => {
   const [showSplash, setShowSplash] = useState(true);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowSplash(false);
-    }, 2500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (showSplash) return <SplashScreen />;
+  if (showSplash) return <SplashScreen onComplete={() => setShowSplash(false)} />;
 
   return (
     <div className="min-h-screen flex flex-col">
