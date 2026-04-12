@@ -265,22 +265,22 @@ const PlaceOrder = () => {
 
   /* ================= UI ================= */
   return (
-    <form onSubmit={onSubmitHandler} className="min-h-screen pt-10 pb-20 bg-[#faf9f7]">
-      <div className="max-w-7xl mx-auto px-4 grid lg:grid-cols-2 gap-10">
+    <form onSubmit={onSubmitHandler} className="min-h-screen pt-6 sm:pt-10 pb-20 bg-[#faf9f7]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-8 lg:gap-10">
 
         {/* LEFT COLUMN */}
-        <div className="space-y-8">
+        <div className="space-y-6 sm:space-y-8">
           
           {/* AVAILABLE SAVED ADDRESSES */}
           {savedAddresses.length > 0 && (
              <section className="bg-white p-6 sm:p-8 rounded-2xl border">
                 <Title text1="SAVED" text2="ADDRESSES" />
-                <div className="flex gap-4 overflow-x-auto mt-4 pb-2">
+                <div className="flex gap-4 overflow-x-auto mt-4 pb-2 snap-x">
                   {savedAddresses.map((addr, idx) => (
                     <div 
                       key={idx} 
                       onClick={() => handleSelectAddress(addr)}
-                      className="min-w-[200px] border border-gray-200 p-4 rounded-xl cursor-pointer hover:border-[#6B4E2E] bg-gray-50 flex flex-col justify-between"
+                      className="min-w-[240px] snap-center border border-gray-200 p-4 rounded-xl cursor-pointer hover:border-[#6B4E2E] bg-gray-50 flex flex-col justify-between shrink-0"
                     >
                       <div>
                         <h4 className="font-semibold text-[#6B4E2E] flex items-center gap-2">📍 {addr.addressName}</h4>
@@ -297,7 +297,7 @@ const PlaceOrder = () => {
           <section className="bg-white p-6 sm:p-8 rounded-2xl border">
             <Title text1="DELIVERY" text2="DETAILS" />
             
-            <div className="grid sm:grid-cols-2 gap-5 mt-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 mt-6 sm:mt-8">
               {[
                 ['firstName','First name'],['lastName','Last name'],
                 ['email','Email'],['phone','Phone'],
@@ -350,11 +350,11 @@ const PlaceOrder = () => {
             <Title text1="PURCHASE" text2="ITEMS" />
             <div className="mt-4 space-y-4 max-h-[300px] overflow-y-auto pr-2">
                {orderItems.map((item, idx) => (
-                 <div key={idx} className="flex gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100 items-center">
-                    <img src={item.image?.[0] || assets.hero_image} className="w-16 h-16 object-cover rounded shadow-sm" alt="product"/>
-                    <div className="flex-1">
+                 <div key={idx} className="flex gap-3 sm:gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100 items-center">
+                    <img src={item.image?.[0] || assets.hero_image} className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded shadow-sm" alt="product"/>
+                    <div className="flex-1 min-w-0">
                       <p className="font-semibold text-gray-800 line-clamp-1">{item.name}</p>
-                      <p className="text-sm text-gray-500 mt-1">Size: <b>{item.size}</b> | Qty: <b>{item.quantity}</b></p>
+                      <p className="text-xs sm:text-sm text-gray-500 mt-1 truncate">Size: <b>{item.size}</b> | Qty: <b>{item.quantity}</b></p>
                     </div>
                     <div>
                       <p className="font-bold text-[#6B4E2E]">₹{item.price * item.quantity}</p>
@@ -368,18 +368,18 @@ const PlaceOrder = () => {
           {/* COUPON */}
           <div className="bg-white p-6 rounded-2xl border">
             <Title text1="APPLY" text2="COUPON" />
-            <div className="flex gap-3 mt-4">
+            <div className="flex flex-col sm:flex-row gap-3 mt-4">
               <input
                 value={couponCode}
                 onChange={(e) => setCouponCode(e.target.value)}
                 placeholder="Enter coupon code here..."
-                className="flex-1 border bg-gray-50 rounded-xl px-4 py-3 outline-none focus:ring-1 focus:ring-[#6B4E2E]"
+                className="w-full sm:flex-1 border bg-gray-50 rounded-xl px-4 py-3 outline-none focus:ring-1 focus:ring-[#6B4E2E]"
               />
               <button
                 type="button"
                 onClick={applyCoupon}
                 disabled={couponLoading}
-                className="bg-[#6B4E2E] text-white px-6 py-3 rounded-xl hover:bg-[#5a4225] transition"
+                className="w-full sm:w-auto bg-[#6B4E2E] text-white px-6 py-3 rounded-xl hover:bg-[#5a4225] transition"
               >
                 {couponLoading ? "APPLYING..." : "Apply"}
               </button>
