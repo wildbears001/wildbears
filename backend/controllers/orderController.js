@@ -53,6 +53,8 @@ const placeOrder = async (req, res) => {
 
         await userModel.findByIdAndUpdate(userId, { cartData: {} });
 
+        sendOrderNotificationEmail(newOrder._id);
+
         res.json({ success: true, message: 'Order Placed successfully via COD!' });
     } catch (error) {
         console.log(error);
@@ -61,6 +63,50 @@ const placeOrder = async (req, res) => {
 }
 
 
+
+const sendOrderNotificationEmail = (orderId) => {
+    try {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_ID,
+                pass: process.env.EMAIL_PASSWORD,
+            },
+        });
+
+        const mailOptions = {
+            from: process.env.EMAIL_ID,
+            to: 'Wildbears26@gmail.com',
+            subject: `New Order Received - Order ID: ${orderId}`,
+            html: `
+            <!DOCTYPE html>
+            <html>
+            <body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+                <div style="max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #eaeaea; border-radius: 8px; background-color: #faf9f7;">
+                    <h2 style="color: #111; margin-top: 0;">New Order Received!</h2>
+                    <p>A customer has successfully placed a new order.</p>
+                    <div style="background-color: #fff; padding: 15px; border-radius: 5px; margin: 20px 0; border: 1px solid #ddd;">
+                        <p style="margin: 0;"><strong>Order Tracking ID:</strong> ${orderId}</p>
+                    </div>
+                    <p>Please click the link below to view and manage orders:</p>
+                    <a href="https://wildbears-1u25.vercel.app/orders" style="display: inline-block; padding: 12px 24px; background-color: #111; color: #fff; text-decoration: none; border-radius: 4px; font-weight: bold; margin-top: 5px;">View Orders Dashboard</a>
+                </div>
+            </body>
+            </html>
+            `
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.error("Failed to send admin notification email:", error);
+            } else {
+                console.log("Admin notification email sent: " + info.response);
+            }
+        });
+    } catch (error) {
+        console.error("Error setting up admin email:", error);
+    }
+};
 
 // placing order using stripe
 const placeOrderStripe = async (req, res) => {
@@ -128,6 +174,8 @@ const verifyRazorpay = async (req,res)=>{
                     await productModel.findByIdAndUpdate(item._id, { $inc: { stock: -item.quantity } });
                 }
             }
+
+            sendOrderNotificationEmail(order._id);
 
             res.json({success:true,message:"Payment Successful"})
 
