@@ -37,12 +37,9 @@ const Navbar = () => {
 
   return (
     <>
-      {/* Spacer to prevent content from hiding behind fixed navbar */}
-      <div className="h-20 sm:h-24"></div>
-
       {/* ================= NAVBAR ================= */}
       <header 
-        className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
+        className={`sticky top-0 left-0 w-full z-50 transition-all duration-500 ${
           scrolled 
             ? 'bg-white/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm py-2' 
             : 'bg-white/40 backdrop-blur-sm border-b border-transparent py-4'
