@@ -6,20 +6,20 @@ import { ShopContext } from "../context/ShopContext";
 const Hero = () => {
   const { uiElements } = useContext(ShopContext);
   const sliderRef = useRef(null);
-  
+
   const heroElements = uiElements ? uiElements.filter(el => el.section === 'hero') : [];
-  
-  const banners = heroElements.length > 0 
-    ? heroElements 
+
+  const banners = heroElements.length > 0
+    ? heroElements
     : [
-        { resourceType: "image", mediaUrl: assets.b1 },
-        { resourceType: "image", mediaUrl: assets.b2 },
-        { resourceType: "image", mediaUrl: assets.b3 },
-        { resourceType: "image", mediaUrl: assets.b4 },
-        { resourceType: "image", mediaUrl: assets.b5 },
-        { resourceType: "image", mediaUrl: assets.b6 },
-        { resourceType: "image", mediaUrl: assets.b7 },
-      ];
+      { resourceType: "image", mediaUrl: assets.b1 },
+      { resourceType: "image", mediaUrl: assets.b2 },
+      { resourceType: "image", mediaUrl: assets.b3 },
+      { resourceType: "image", mediaUrl: assets.b4 },
+      { resourceType: "image", mediaUrl: assets.b5 },
+      { resourceType: "image", mediaUrl: assets.b6 },
+      { resourceType: "image", mediaUrl: assets.b7 },
+    ];
 
   const scroll = (direction) => {
     if (!sliderRef.current) return;
@@ -89,19 +89,7 @@ const Hero = () => {
             {/* TEXT OVERLAY */}
             <div className="absolute inset-0 flex items-center bg-black/30">
               <div className="text-white px-6 sm:px-16 max-w-xl">
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="w-10 h-[2px] bg-white"></span>
-                  <p className="text-sm tracking-widest">OUR BESTSELLER</p>
-                </div>
 
-                <h1 className="text-3xl sm:text-5xl font-serif leading-tight mb-4">
-                  Latest Arrivals
-                </h1>
-
-                <div className="flex items-center gap-3 cursor-pointer">
-                  <p className="font-semibold tracking-wide">SHOP NOW</p>
-                  <span className="w-10 h-[2px] bg-white"></span>
-                </div>
               </div>
             </div>
 

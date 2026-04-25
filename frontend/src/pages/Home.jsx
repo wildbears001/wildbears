@@ -7,6 +7,8 @@ import NewLetterBox from '../components/NewLetterBox'
 import CategoryFilters from '../components/CategoryFilters'
 import VideoHero from '../components/VideoHero'
 import ShopByCategory from '../components/ShopByCategory'
+import FAQSection from '../components/FAQSection'
+import HomeReviews from '../components/HomeReviews'
 
 
 const Home = () => {
@@ -19,6 +21,8 @@ const Home = () => {
       <VideoHero/>
       <BestSeller/>
       <ShopByCategory/>
+      <FAQSection />
+      <HomeReviews />
       {/* <OurPolicy/> */}
       <NewLetterBox/>
 
