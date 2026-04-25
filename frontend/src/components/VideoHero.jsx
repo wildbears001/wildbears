@@ -12,10 +12,10 @@ const VideoHero = () => {
   const slides = videoElements.length > 0
     ? videoElements
     : [
-        { resourceType: "video", mediaUrl: assets.v1 },
-        { resourceType: "video", mediaUrl: assets.v2 },
-        { resourceType: "video", mediaUrl: assets.v3 },
-      ];
+      { resourceType: "video", mediaUrl: assets.v1 },
+      { resourceType: "video", mediaUrl: assets.v2 },
+      { resourceType: "video", mediaUrl: assets.v3 },
+    ];
 
   const scroll = (direction) => {
     if (!sliderRef.current) return;
@@ -85,23 +85,6 @@ const VideoHero = () => {
             )}
 
             {/* TEXT OVERLAY */}
-            <div className="absolute inset-0 flex items-center bg-black/30 pointer-events-none">
-              <div className="text-white px-6 sm:px-16 max-w-xl">
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="w-10 h-[2px] bg-white"></span>
-                  <p className="text-sm tracking-widest">FEATURED DROP</p>
-                </div>
-
-                <h1 className="text-3xl sm:text-5xl font-serif leading-tight mb-4">
-                  Streetwear Motion
-                </h1>
-
-                <div className="flex items-center gap-3">
-                  <p className="font-semibold tracking-wide">SHOP NOW</p>
-                  <span className="w-10 h-[2px] bg-white"></span>
-                </div>
-              </div>
-            </div>
 
           </div>
         ))}
