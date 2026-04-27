@@ -19,10 +19,10 @@ const Contact = () => {
 
         {/* ONLINE IMAGE */}
         <img
-  src="https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=1000&q=80"
-  className="w-full md:max-w-[480px] rounded-lg object-cover border border-[#6B4E2E]/30"
-  alt="WILDBEARS Streetwear Contact"
-/>
+          src="https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=1000&q=80"
+          className="w-full md:max-w-[480px] rounded-lg object-cover border border-[#6B4E2E]/30"
+          alt="WILDBEARS Streetwear Contact"
+        />
 
         <div className='flex flex-col justify-center items-start gap-6'>
 
@@ -31,13 +31,13 @@ const Contact = () => {
           </p>
 
           <p className='text-gray-500'>
-            Near Dhullapally <br />
-            Kompally Road, Secunderabad, Telangana
+            Guntur,<br />
+            Andhra Pradesh
           </p>
 
           <p className='text-gray-500'>
-            Tel: (+91) 6281874010 <br />
-            Email: heven.storess@gmail.com
+            Tel:(+91) 7075228555 <br />
+            Email: Wildbears26@gmail.com
           </p>
 
           <p className='font-semibold text-xl text-[#6B4E2E]'>
