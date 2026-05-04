@@ -119,6 +119,10 @@ const updateProduct = async (req, res) => {
       maxPreOrderQty,
       existingImages,
       stock,
+      sizes,
+      category,
+      subCategory,
+      bestseller,
     } = req.body;
 
     const product = await productModel.findById(_id);
@@ -156,6 +160,11 @@ const updateProduct = async (req, res) => {
     if (price !== undefined) product.price = Number(price);
     if (actualPrice !== undefined) product.actualPrice = Number(actualPrice);
     if (stock !== undefined) product.stock = Number(stock);
+
+    if (category !== undefined) product.category = category;
+    if (subCategory !== undefined) product.subCategory = subCategory;
+    if (bestseller !== undefined) product.bestseller = bestseller === 'true' || bestseller === true;
+    if (sizes !== undefined) product.sizes = JSON.parse(sizes);
 
     product.isPreOrder = isPreOrder === "true" || isPreOrder === true;
 

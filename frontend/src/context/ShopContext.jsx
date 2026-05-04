@@ -10,8 +10,8 @@ export const ShopContext = createContext();
 
 const ShopContextProvider = (props)=>{
     const currency = '₹ ';
-    const delivery_fee = 0;
     const backendUrl = import.meta.env.VITE_BACKEND_URL
+    const [delivery_fee, setDeliveryFee] = useState(69);
     const [search,setSearch] = useState('');
     const [showSearch,setShowSearch] = useState(false);
     const [cartItems,setCartItems] = useState({});
@@ -162,9 +162,21 @@ const ShopContextProvider = (props)=>{
         }
     }
 
+    const getSettingsData = async () => {
+        try {
+            const response = await axios.get(backendUrl + '/api/settings/get');
+            if (response.data.success) {
+                setDeliveryFee(response.data.settings.deliveryFee || 0);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     useEffect(()=>{
         getProductsData()
         getUIElementsData()
+        getSettingsData()
     },[])
 
     useEffect(()=>{

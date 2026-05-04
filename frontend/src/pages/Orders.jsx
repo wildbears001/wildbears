@@ -60,25 +60,31 @@ const Orders = () => {
           >
             {/* LEFT */}
             <div className="flex items-start gap-6 text-sm">
-              <div className="relative w-16 sm:w-20">
-                {item.isPreOrder && (
+              <div className="relative w-16 sm:w-20 flex-shrink-0">
+                {item.isPreOrder && item.name && (
                   <div className="absolute top-0 left-0
                                   bg-[#6B4E2E] text-white
                                   text-[10px] font-semibold
-                                  px-2 py-[2px] rounded-br">
+                                  px-2 py-[2px] rounded-br z-10">
                     PRE-ORDER
                   </div>
                 )}
-                <img src={item.image[0]} className="w-full rounded-md" alt="" />
+                {item.image && item.image[0] ? (
+                   <img src={item.image[0]} className="w-full rounded-md" alt="" />
+                ) : (
+                   <div className="w-full aspect-square bg-gray-100 border border-gray-200 rounded-md flex items-center justify-center text-[10px] text-gray-500 font-semibold uppercase text-center p-2 shadow-inner">
+                      Deleted
+                   </div>
+                )}
               </div>
 
               <div>
                 <p className="sm:text-base font-medium text-[#6B4E2E]">
-                  {item.name}
+                  {item.name || <span className="text-red-500 italic">Product Not Available</span>}
                 </p>
 
                 <div className="flex flex-wrap items-center gap-4 mt-1 text-sm">
-                  <p>{currency}{item.price}</p>
+                  <p className="font-medium">{item.price ? `${currency}${item.price}` : <span className="text-gray-400">N/A</span>}</p>
                   <p>Qty: {item.quantity}</p>
                   <p>Size: {item.size}</p>
                 </div>

@@ -11,6 +11,7 @@ const PlaceOrder = () => {
   const [loading, setLoading] = useState(false);
   const [couponLoading, setCouponLoading] = useState(false);
   const [isCodEnabled, setIsCodEnabled] = useState(false);
+  const [razorpayDiscount, setRazorpayDiscount] = useState(0);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -35,6 +36,7 @@ const PlaceOrder = () => {
         const res = await axios.get(`${backendUrl}/api/settings/get`);
         if (res.data?.success) {
           setIsCodEnabled(res.data.settings.isCodEnabled);
+          setRazorpayDiscount(res.data.settings.razorpayDiscount || 0);
         }
       } catch (err) {
         console.error("Failed to load settings:", err);
@@ -206,7 +208,7 @@ const PlaceOrder = () => {
     }
 
     try {
-      const totalAmount = Math.max(0, subTotal + delivery_fee + (method === "cod" ? 100 : 0) - discountAmount - (method === "razorpay" ? 50 : 0));
+      const totalAmount = Math.max(0, subTotal + delivery_fee + (method === "cod" ? 100 : 0) - discountAmount - (method === "razorpay" ? razorpayDiscount : 0));
 
       const orderData = {
         address: formData,
@@ -407,10 +409,10 @@ const PlaceOrder = () => {
                 </div>
               )}
 
-              {method === 'razorpay' && (
+              {method === 'razorpay' && razorpayDiscount > 0 && (
                 <div className="flex justify-between text-green-600 bg-green-50 p-2 rounded">
                   <span>Razorpay Instant Discount</span>
-                  <span className="font-bold">-₹50</span>
+                  <span className="font-bold">-₹{razorpayDiscount}</span>
                 </div>
               )}
 
@@ -424,7 +426,7 @@ const PlaceOrder = () => {
               <div className="flex justify-between font-bold text-xl border-t pt-4 mt-2">
                 <span>Total</span>
                 <span className="text-[#6B4E2E]">
-                  ₹{Math.max(0, subTotal + delivery_fee + (method === "cod" ? 100 : 0) - discountAmount - (method === "razorpay" ? 50 : 0))}
+                  ₹{Math.max(0, subTotal + delivery_fee + (method === "cod" ? 100 : 0) - discountAmount - (method === "razorpay" ? razorpayDiscount : 0))}
                 </span>
               </div>
             </div>

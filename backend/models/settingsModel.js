@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 
 const settingsSchema = new mongoose.Schema({
     isCodEnabled: { type: Boolean, default: false },
+    razorpayDiscount: { type: Number, default: 0 },
+    deliveryFee: { type: Number, default: 69 },
     socialLinks: {
         instagram: { type: String, default: "" },
         twitter: { type: String, default: "" },

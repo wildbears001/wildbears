@@ -47,3 +47,35 @@ export const updateSocialLinks = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 };
+
+export const updateRazorpayDiscount = async (req, res) => {
+    try {
+        const { razorpayDiscount } = req.body;
+        let settings = await settingsModel.findOne();
+        if (!settings) {
+            settings = await settingsModel.create({});
+        }
+        settings.razorpayDiscount = Number(razorpayDiscount) || 0;
+        await settings.save();
+        res.json({ success: true, message: "Razorpay discount updated", settings });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+export const updateDeliveryFee = async (req, res) => {
+    try {
+        const { deliveryFee } = req.body;
+        let settings = await settingsModel.findOne();
+        if (!settings) {
+            settings = await settingsModel.create({});
+        }
+        settings.deliveryFee = Number(deliveryFee) || 0;
+        await settings.save();
+        res.json({ success: true, message: "Delivery fee updated", settings });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};

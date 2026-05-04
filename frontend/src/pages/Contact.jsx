@@ -4,7 +4,7 @@ import NewLetterBox from '../components/NewLetterBox'
 
 const Contact = () => {
   function btnClick() {
-    window.open("https://forms.gle/QaCkUCL1Wz42REKXA")
+    window.open("")
   }
 
   return (
@@ -13,6 +13,7 @@ const Contact = () => {
       <div className='text-center text-2xl pt-10 border-t border-[#6B4E2E]/30'>
         <Title text1={'CONTACT'} text2={'US'} />
       </div>
+
 
       {/* ===== CONTACT CONTENT ===== */}
       <div className='my-10 flex flex-col justify-center md:flex-row gap-10 mb-28'>

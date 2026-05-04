@@ -3,6 +3,7 @@ import axios from "axios";
 import { backendUrl, currency } from "../App";
 import { toast } from "react-toastify";
 import { PencilLine, Trash2, Search, Zap, Crown, PackageOpen, Save, X, CheckCircle2 } from "lucide-react";
+import { assets } from '../assets/assets';
 
 const List = ({ token }) => {
   const [list, setList] = useState([]);
@@ -40,11 +41,12 @@ const List = ({ token }) => {
     e.preventDefault();
     try {
       const fd = new FormData();
-      const fields = ["_id", "name", "description", "category", "subCategory", "type", "features", "quality", "price", "actualPrice", "bestseller", "isPreOrder"];
+      const fields = ["_id", "name", "description", "category", "subCategory", "type", "features", "quality", "price", "actualPrice", "bestseller", "isPreOrder", "stock"];
       fields.forEach(f => fd.append(f, editProduct[f]));
       
       fd.append("preOrderAvailableDate", editProduct.preOrderAvailableDate || "");
       fd.append("maxPreOrderQty", editProduct.maxPreOrderQty || "");
+      fd.append("sizes", JSON.stringify(editProduct.sizes || []));
       fd.append("existingImages", JSON.stringify(editProduct.image));
 
       if (editProduct.newImages) {
@@ -127,7 +129,7 @@ const List = ({ token }) => {
 
               {/* Actions Footer */}
               <div className="grid grid-cols-2 border-t border-gray-100 bg-gray-50 mt-auto">
-                 <button onClick={() => setEditProduct({ ...p, newImages: [] })} className="flex items-center justify-center gap-2 py-3 hover:bg-[#6B4E2E] hover:text-white text-gray-600 font-semibold text-sm transition-colors border-r border-gray-200">
+                 <button onClick={() => setEditProduct({ ...p, newImages: [null, null, null, null], sizes: p.sizes || [] })} className="flex items-center justify-center gap-2 py-3 hover:bg-[#6B4E2E] hover:text-white text-gray-600 font-semibold text-sm transition-colors border-r border-gray-200">
                    <PencilLine size={16} /> Edit
                  </button>
                  <button onClick={() => removeProduct(p._id)} className="flex items-center justify-center gap-2 py-3 hover:bg-red-500 hover:text-white text-red-500 font-semibold text-sm transition-colors">
@@ -148,77 +150,174 @@ const List = ({ token }) => {
            
            <h3 className="text-xl font-bold text-gray-800 mb-8 border-b border-gray-200 pb-4">Editing Blueprint: {editProduct.name}</h3>
            
-           <form onSubmit={updateProduct} className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-6">
-             {/* Core Data Block */}
-             <div className="space-y-5">
-               <h4 className="font-bold text-[#6B4E2E] uppercase tracking-wider text-xs flex items-center gap-2"><Zap size={14}/> Core Attributes</h4>
-               
-               <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Title</label>
-                  <input value={editProduct.name || ""} onChange={(e) => setEditProduct({ ...editProduct, name: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-[#6B4E2E]" />
-               </div>
-
-               <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Description</label>
-                  <textarea value={editProduct.description || ""} onChange={(e) => setEditProduct({ ...editProduct, description: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-[#6B4E2E] h-24 resize-none" />
-               </div>
-
-               <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Price</label>
-                    <input type="number" value={editProduct.price || ""} onChange={(e) => setEditProduct({ ...editProduct, price: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-[#6B4E2E]" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Compare Price</label>
-                    <input type="number" value={editProduct.actualPrice || ""} onChange={(e) => setEditProduct({ ...editProduct, actualPrice: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-[#6B4E2E]" />
-                  </div>
+           <form onSubmit={updateProduct} className='flex flex-col gap-8'>
+             
+             {/* Images Section */}
+             <div className='bg-gray-50 p-6 rounded-xl border border-gray-100'>
+               <p className='text-sm font-semibold text-gray-700 mb-4'>Product Imagery</p>
+               <div className='flex gap-4 overflow-x-auto pb-2'>
+                 {[0, 1, 2, 3].map((idx) => {
+                   const existingImg = editProduct.image && editProduct.image[idx];
+                   const newImg = editProduct.newImages && editProduct.newImages[idx];
+                   return (
+                   <label key={idx} className='cursor-pointer group relative flex-shrink-0'>
+                     <div className='w-32 h-32 rounded-xl border-2 border-dashed border-gray-300 bg-white flex items-center justify-center overflow-hidden hover:border-gray-400 transition-all'>
+                       <img 
+                         className={`object-cover ${existingImg || newImg ? 'w-full h-full' : 'w-10 opacity-50'}`} 
+                         src={newImg ? URL.createObjectURL(newImg) : (existingImg || assets.upload_area)} 
+                         alt={`Upload ${idx+1}`} 
+                       />
+                     </div>
+                     <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/5 transition-opacity rounded-xl'><span className='text-xs font-medium text-gray-500'>Upload</span></div>
+                     <input onChange={(e) => {
+                       const newFiles = [...(editProduct.newImages || [null, null, null, null])];
+                       newFiles[idx] = e.target.files[0];
+                       setEditProduct({ ...editProduct, newImages: newFiles });
+                     }} type="file" hidden accept="image/*" />
+                   </label>
+                 )})}
                </div>
              </div>
 
-             {/* Secondary Data Block */}
-             <div className="space-y-5">
-               <h4 className="font-bold text-[#6B4E2E] uppercase tracking-wider text-xs flex items-center gap-2 mt-2 lg:mt-0"><Zap size={14}/> Metadata & Toggles</h4>
-               <div className="grid grid-cols-2 gap-4">
-                 <input placeholder="Category" value={editProduct.category || ""} onChange={(e) => setEditProduct({ ...editProduct, category: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-[#6B4E2E]" />
-                 <input placeholder="Sub Category" value={editProduct.subCategory || ""} onChange={(e) => setEditProduct({ ...editProduct, subCategory: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-[#6B4E2E]" />
-                 <input placeholder="Type Variant" value={editProduct.type || ""} onChange={(e) => setEditProduct({ ...editProduct, type: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-[#6B4E2E]" />
-                 <input placeholder="Quality Code" value={editProduct.quality || ""} onChange={(e) => setEditProduct({ ...editProduct, quality: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-[#6B4E2E]" />
+             {/* Basic Details */}
+             <div className='grid grid-cols-1 gap-6'>
+               <div>
+                 <label className='block text-sm font-medium text-gray-700 mb-2'>Product Name</label>
+                 <input onChange={(e)=>setEditProduct({...editProduct, name: e.target.value})} value={editProduct.name || ''} className='w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all outline-none' type="text" required />
                </div>
 
-               <div className="flex gap-6 py-4 bg-white px-5 rounded-lg border border-gray-200 mt-2">
-                 <label className="flex items-center gap-3 cursor-pointer group">
-                   <div className="relative flex items-center">
-                     <input type="checkbox" checked={editProduct.bestseller || false} onChange={e => setEditProduct({...editProduct, bestseller: e.target.checked})} className="peer sr-only" />
-                     <div className="w-5 h-5 border-2 border-gray-300 rounded flex items-center justify-center peer-checked:bg-[#6B4E2E] peer-checked:border-[#6B4E2E] transition-colors"><CheckCircle2 size={14} className="text-white opacity-0 peer-checked:opacity-100" /></div>
+               <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                 <div>
+                   <label className='block text-sm font-medium text-gray-700 mb-2'>Description</label>
+                   <textarea onChange={(e)=>setEditProduct({...editProduct, description: e.target.value})} value={editProduct.description || ''} className='w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all outline-none min-h-[120px]' required />
+                 </div>
+                 <div className='flex flex-col gap-6'>
+                   <div>
+                     <label className='block text-sm font-medium text-gray-700 mb-2'>Features</label>
+                     <textarea onChange={(e)=>setEditProduct({...editProduct, features: e.target.value})} value={editProduct.features || ''} className='w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all outline-none h-[40px]' required />
                    </div>
-                   <span className="font-semibold text-gray-700">Flag as Bestseller</span>
-                 </label>
+                   <div className='grid grid-cols-2 gap-4'>
+                     <div>
+                       <label className='block text-sm font-medium text-gray-700 mb-2'>Type</label>
+                       <input onChange={(e)=>setEditProduct({...editProduct, type: e.target.value})} value={editProduct.type || ''} className='w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all outline-none' type="text" required />
+                     </div>
+                     <div>
+                       <label className='block text-sm font-medium text-gray-700 mb-2'>Fabric/Quality</label>
+                       <input onChange={(e)=>setEditProduct({...editProduct, quality: e.target.value})} value={editProduct.quality || ''} className='w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all outline-none' type="text" required />
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             </div>
 
-                 <label className="flex items-center gap-3 cursor-pointer group">
-                   <div className="relative flex items-center">
-                     <input type="checkbox" checked={editProduct.isPreOrder || false} onChange={e => setEditProduct({...editProduct, isPreOrder: e.target.checked})} className="peer sr-only" />
-                     <div className="w-5 h-5 border-2 border-gray-300 rounded flex items-center justify-center peer-checked:bg-[#6B4E2E] peer-checked:border-[#6B4E2E] transition-colors"><CheckCircle2 size={14} className="text-white opacity-0 peer-checked:opacity-100" /></div>
-                   </div>
-                   <span className="font-semibold text-gray-700">Enable Pre-order Logic</span>
+             {/* Pricing, Inventory & Category */}
+             <div className='bg-gray-50 p-6 rounded-xl border border-gray-100 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6'>
+               <div className='md:col-span-1'>
+                 <label className='block text-sm font-medium text-gray-700 mb-2'>Category</label>
+                 <select onChange={(e)=>setEditProduct({...editProduct, category: e.target.value})} value={editProduct.category || ''} className='w-full px-4 py-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-gray-900'>
+                   <option value="Men">Men</option>
+                   <option value="Unisex">Unisex</option>
+                   <option value="Women">Women</option>
+                   <option value="Kids">Kids</option>
+                   <option value="Footwear">Footwear</option>
+                 </select>
+               </div>
+               <div className='md:col-span-1'>
+                 <label className='block text-sm font-medium text-gray-700 mb-2'>Sub Category</label>
+                 <select onChange={(e)=>setEditProduct({...editProduct, subCategory: e.target.value})} value={editProduct.subCategory || ''} className='w-full px-4 py-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-gray-900'>
+                   <option value="Topwear">Topwear</option>
+                   <option value="Bottomwear">Bottomwear</option>
+                   <option value="Winterwear">Winterwear</option>
+                   <option value="Footwear">Footwear</option>
+                 </select>
+               </div>
+               <div className='md:col-span-1'>
+                 <label className='block text-sm font-medium text-gray-700 mb-2'>Actual Price (₹)</label>
+                 <input onChange={(e)=>setEditProduct({...editProduct, actualPrice: e.target.value})} value={editProduct.actualPrice || ''} className='w-full px-4 py-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-gray-900' type="number" required min="0"/>
+               </div>
+               <div className='md:col-span-1'>
+                 <label className='block text-sm font-medium text-gray-700 mb-2'>Selling Price (₹)</label>
+                 <input onChange={(e)=>setEditProduct({...editProduct, price: e.target.value})} value={editProduct.price || ''} className='w-full px-4 py-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-gray-900 font-semibold text-green-700' type="number" required min="0"/>
+               </div>
+               <div className='md:col-span-1'>
+                 <label className='block text-sm font-medium text-gray-700 mb-2'>Stock Count</label>
+                 <input onChange={(e)=>setEditProduct({...editProduct, stock: e.target.value})} value={editProduct.stock || ''} className='w-full px-4 py-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-gray-900 text-blue-700 font-semibold' type="number" required min="0"/>
+               </div>
+             </div>
+
+             {/* Sizes & Toggles */}
+             <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
+               <div>
+                 <label className='block text-sm font-medium text-gray-700 mb-3'>Available Sizes</label>
+                 <div className='flex flex-wrap gap-3'>
+                   {['S', 'M', 'L', 'XL', 'XXL'].map((size) => (
+                     <div 
+                       key={size}
+                       onClick={() => setEditProduct(prev => ({
+                         ...prev,
+                         sizes: prev.sizes?.includes(size) ? prev.sizes.filter(item => item !== size) : [...(prev.sizes || []), size]
+                       }))}
+                       className={`w-12 h-12 flex items-center justify-center rounded-xl font-medium cursor-pointer transition-all border
+                         ${editProduct.sizes?.includes(size) ? 'bg-gray-900 text-white border-gray-900 shadow-md transform scale-105' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'}`}
+                     >
+                       {size}
+                     </div>
+                   ))}
+                 </div>
+               </div>
+               
+               <div className='flex flex-col justify-center'>
+                 <label className='flex items-center gap-3 p-4 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors w-max'>
+                   <input 
+                     onChange={(e) => setEditProduct({...editProduct, bestseller: e.target.checked})} 
+                     checked={editProduct.bestseller || false} 
+                     type='checkbox' 
+                     className='w-5 h-5 accent-gray-900 rounded cursor-pointer' 
+                   />
+                   <span className='font-medium text-gray-800 tracking-wide'>Mark as Bestseller ✨</span>
                  </label>
+               </div>
+             </div>
+
+             {/* Pre-order Section */}
+             <div className='border-t border-gray-100 pt-8'>
+               <div className='flex items-center gap-3 mb-6'>
+                 <div className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors ${editProduct.isPreOrder ? 'bg-gray-900' : 'bg-gray-300'}`} onClick={() => setEditProduct({...editProduct, isPreOrder: !editProduct.isPreOrder})}>
+                   <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${editProduct.isPreOrder ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                 </div>
+                 <span className='font-medium text-gray-800'>Enable Pre-Order Mode</span>
                </div>
 
                {editProduct.isPreOrder && (
-                 <div className="grid grid-cols-2 gap-4 animate-fade-in bg-amber-50 p-4 border border-amber-200 rounded-lg">
+                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-6 bg-amber-50/50 p-6 rounded-xl border border-amber-100'>
                    <div>
-                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Fulfillment Date</label>
-                     <input type="date" value={editProduct.preOrderAvailableDate?.slice(0, 10) || ""} onChange={(e) => setEditProduct({ ...editProduct, preOrderAvailableDate: e.target.value })} className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg outline-none focus:border-[#6B4E2E]" />
+                     <label className='block text-sm font-medium text-gray-700 mb-2'>Shipping Date</label>
+                     <input
+                       type='date'
+                       className='w-full px-4 py-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500'
+                       value={editProduct.preOrderAvailableDate?.slice(0,10) || ''}
+                       onChange={(e) => setEditProduct({...editProduct, preOrderAvailableDate: e.target.value})}
+                       required={editProduct.isPreOrder}
+                     />
                    </div>
                    <div>
-                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Max Stock Allocation</label>
-                     <input type="number" value={editProduct.maxPreOrderQty || ""} onChange={(e) => setEditProduct({ ...editProduct, maxPreOrderQty: e.target.value })} className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg outline-none focus:border-[#6B4E2E]" />
+                     <label className='block text-sm font-medium text-gray-700 mb-2'>Max Pre-Order Capacity</label>
+                     <input
+                       type='number'
+                       className='w-full px-4 py-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500'
+                       value={editProduct.maxPreOrderQty || ''}
+                       onChange={(e) => setEditProduct({...editProduct, maxPreOrderQty: e.target.value})}
+                       required={editProduct.isPreOrder}
+                       placeholder='0'
+                       min="1"
+                     />
                    </div>
                  </div>
                )}
              </div>
 
              {/* Action Submit */}
-             <div className="col-span-1 lg:col-span-2 flex justify-end gap-4 mt-6 border-t border-gray-200 pt-8">
+             <div className="flex justify-end gap-4 mt-6 border-t border-gray-200 pt-8">
                <button type="button" onClick={() => setEditProduct(null)} className="px-6 py-3 bg-white font-bold text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors">Abort Changes</button>
                <button type="submit" className="px-8 py-3 bg-[#6B4E2E] text-white font-bold tracking-wide rounded-xl shadow-lg border border-[#6B4E2E] hover:bg-[#5a4225] flex items-center gap-2"><Save size={18}/> SYNC DATABASE</button>
              </div>
