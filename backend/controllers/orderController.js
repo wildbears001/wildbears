@@ -6,9 +6,8 @@ import productModel from "../models/productModel.js";
 
 
 
-// global varibles
+// global variables
 const currency = 'inr'
-const delivery_fee = 69
 
 
 //gateway initialize
@@ -31,6 +30,17 @@ const placeOrder = async (req, res) => {
         }
 
         const { userId, items, amount, address } = req.body;
+
+        // Server-side delivery fee validation
+        const itemSubTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const threshold = settings.freeDeliveryThreshold || 0;
+        const serverDeliveryFee = (threshold > 0 && itemSubTotal >= threshold) ? 0 : (settings.deliveryFee || 0);
+        const codHandlingFee = 100;
+        const expectedMin = itemSubTotal + serverDeliveryFee;
+
+        if (amount < expectedMin - codHandlingFee - 1) {
+            return res.json({ success: false, message: "Order amount mismatch. Please refresh and try again." });
+        }
 
         const orderData = {
             userId,
@@ -115,9 +125,20 @@ const placeOrderStripe = async (req, res) => {
 
 // plcing order using razorpay
 const placeOrderRazorpay = async (req, res) => {
-
     try {
         const {userId, items, amount, address} = req.body
+
+        // Server-side delivery fee validation
+        const settings = await settingsModel.findOne();
+        if (settings) {
+            const itemSubTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const threshold = settings.freeDeliveryThreshold || 0;
+            const serverDeliveryFee = (threshold > 0 && itemSubTotal >= threshold) ? 0 : (settings.deliveryFee || 0);
+            const expectedMin = itemSubTotal + serverDeliveryFee - (settings.razorpayDiscount || 0);
+            if (amount < expectedMin - 1) {
+                return res.json({ success: false, message: "Order amount mismatch. Please refresh and try again." });
+            }
+        }
 
         const orderData = {
             userId,
@@ -132,7 +153,6 @@ const placeOrderRazorpay = async (req, res) => {
         const newOrder = new orderModel(orderData)
         await newOrder.save()
 
-
         const options = {
             amount: amount * 100,
             currency: currency.toUpperCase(),
@@ -140,26 +160,17 @@ const placeOrderRazorpay = async (req, res) => {
         }
 
         await razorpayInstance.orders.create(options,(error,order)=>{
-
             if(error){
                 console.log(error)
                 return res.json({success:false,message:error})
             }
             res.json({success:true,order})
-
         })
-
-
-
 
     } catch (error) {
         console.log(error)
         res.json({success:false,message:error.message})
     }
-
-    
-
-
 }
 const verifyRazorpay = async (req,res)=>{
     try {

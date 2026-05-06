@@ -63,6 +63,7 @@ const Dashboard = ({ token }) => {
   const [isCodEnabled, setIsCodEnabled] = useState(false);
   const [razorpayDiscount, setRazorpayDiscount] = useState(0);
   const [deliveryFee, setDeliveryFee] = useState(69);
+  const [freeDeliveryThreshold, setFreeDeliveryThreshold] = useState(500);
   const [socials, setSocials] = useState({ instagram: '', facebook: '', twitter: '', youtube: '', phone: '', email: '' });
   const [savingSocials, setSavingSocials] = useState(false);
 
@@ -74,6 +75,7 @@ const Dashboard = ({ token }) => {
            setIsCodEnabled(res.data.settings.isCodEnabled);
            setRazorpayDiscount(res.data.settings.razorpayDiscount || 0);
            setDeliveryFee(res.data.settings.deliveryFee || 0);
+           setFreeDeliveryThreshold(res.data.settings.freeDeliveryThreshold || 0);
            if(res.data.settings.socialLinks) {
               setSocials(prev => ({ ...prev, ...res.data.settings.socialLinks }));
            }
@@ -109,7 +111,7 @@ const Dashboard = ({ token }) => {
 
   const handleSaveDeliveryFee = async () => {
     try {
-      const res = await axios.post(`${backendUrl}/api/settings/update-delivery-fee`, { deliveryFee }, { headers: { token } });
+      const res = await axios.post(`${backendUrl}/api/settings/update-delivery-fee`, { deliveryFee, freeDeliveryThreshold }, { headers: { token } });
       if (res.data?.success) {
         toast.success(res.data.message);
       } else {
@@ -244,21 +246,34 @@ const Dashboard = ({ token }) => {
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center"><Package size={20} /></div>
             <div>
-              <h3 className="font-bold text-gray-800">Delivery Fee</h3>
-              <p className="text-sm text-gray-500">Set global flat delivery fee</p>
+              <h3 className="font-bold text-gray-800">Delivery Settings</h3>
+              <p className="text-sm text-gray-500">Set fee & free delivery threshold</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-             <input 
-               type="number"
-               value={deliveryFee}
-               onChange={(e) => setDeliveryFee(e.target.value)}
-               placeholder="Amount in ₹"
-               className="w-full text-sm px-4 py-3 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-gray-50"
-             />
+          <div className="flex flex-col gap-3">
+             <div className="flex items-center gap-3">
+               <span className="text-sm text-gray-600 w-24">Fee (₹):</span>
+               <input 
+                 type="number"
+                 value={deliveryFee}
+                 onChange={(e) => setDeliveryFee(e.target.value)}
+                 placeholder="Fee Amount"
+                 className="w-full text-sm px-4 py-2 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-gray-50"
+               />
+             </div>
+             <div className="flex items-center gap-3">
+               <span className="text-sm text-gray-600 w-24">Free Above (₹):</span>
+               <input 
+                 type="number"
+                 value={freeDeliveryThreshold}
+                 onChange={(e) => setFreeDeliveryThreshold(e.target.value)}
+                 placeholder="Threshold"
+                 className="w-full text-sm px-4 py-2 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-gray-50"
+               />
+             </div>
              <button
                onClick={handleSaveDeliveryFee}
-               className="px-6 py-3 bg-black text-white font-bold rounded-lg hover:bg-gray-800 transition whitespace-nowrap"
+               className="mt-2 w-full px-6 py-3 bg-black text-white font-bold rounded-lg hover:bg-gray-800 transition"
              >
                SAVE
              </button>

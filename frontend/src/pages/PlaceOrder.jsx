@@ -26,6 +26,7 @@ const PlaceOrder = () => {
     setCartItems,
     getCartAmount,
     delivery_fee,
+    free_delivery_threshold,
     products
   } = useContext(ShopContext);
 
@@ -91,6 +92,8 @@ const PlaceOrder = () => {
   /* ================= DATA COMPUTATION ================= */
   const buyNowProduct = isBuyNow ? products.find(p => p._id === buyProductId) : null;
   const subTotal = buyNowProduct ? buyNowProduct.price : getCartAmount();
+  const isFreeDelivery = free_delivery_threshold > 0 && subTotal >= free_delivery_threshold;
+  const effectiveDeliveryFee = isFreeDelivery ? 0 : delivery_fee;
 
   const getOrderItemsList = () => {
     if (isBuyNow && buyNowProduct) {
@@ -208,7 +211,7 @@ const PlaceOrder = () => {
     }
 
     try {
-      const totalAmount = Math.max(0, subTotal + delivery_fee + (method === "cod" ? 100 : 0) - discountAmount - (method === "razorpay" ? razorpayDiscount : 0));
+      const totalAmount = Math.max(0, subTotal + effectiveDeliveryFee + (method === "cod" ? 100 : 0) - discountAmount - (method === "razorpay" ? razorpayDiscount : 0));
 
       const orderData = {
         address: formData,
@@ -399,8 +402,17 @@ const PlaceOrder = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Delivery Fee</span>
-                <span className="font-medium">₹{delivery_fee}</span>
+                {isFreeDelivery
+                  ? <span className="text-green-600 font-semibold">FREE 🎉</span>
+                  : <span className="font-medium">₹{effectiveDeliveryFee}</span>
+                }
               </div>
+              {isFreeDelivery && (
+                <p className="text-xs text-green-600 -mt-1">Free delivery on orders above ₹{free_delivery_threshold}</p>
+              )}
+              {!isFreeDelivery && free_delivery_threshold > 0 && (
+                <p className="text-xs text-amber-600 -mt-1">Add ₹{free_delivery_threshold - subTotal} more for free delivery</p>
+              )}
               
               {method === 'cod' && (
                 <div className="flex justify-between text-orange-600 bg-orange-50 p-2 rounded">
@@ -426,7 +438,7 @@ const PlaceOrder = () => {
               <div className="flex justify-between font-bold text-xl border-t pt-4 mt-2">
                 <span>Total</span>
                 <span className="text-[#6B4E2E]">
-                  ₹{Math.max(0, subTotal + delivery_fee + (method === "cod" ? 100 : 0) - discountAmount - (method === "razorpay" ? razorpayDiscount : 0))}
+                  ₹{Math.max(0, subTotal + effectiveDeliveryFee + (method === "cod" ? 100 : 0) - discountAmount - (method === "razorpay" ? razorpayDiscount : 0))}
                 </span>
               </div>
             </div>

@@ -66,14 +66,15 @@ export const updateRazorpayDiscount = async (req, res) => {
 
 export const updateDeliveryFee = async (req, res) => {
     try {
-        const { deliveryFee } = req.body;
+        const { deliveryFee, freeDeliveryThreshold } = req.body;
         let settings = await settingsModel.findOne();
         if (!settings) {
             settings = await settingsModel.create({});
         }
-        settings.deliveryFee = Number(deliveryFee) || 0;
+        if (deliveryFee !== undefined) settings.deliveryFee = Number(deliveryFee) || 0;
+        if (freeDeliveryThreshold !== undefined) settings.freeDeliveryThreshold = Number(freeDeliveryThreshold) || 0;
         await settings.save();
-        res.json({ success: true, message: "Delivery fee updated", settings });
+        res.json({ success: true, message: "Delivery fee settings updated", settings });
     } catch (error) {
         console.log(error);
         res.json({ success: false, message: error.message });
