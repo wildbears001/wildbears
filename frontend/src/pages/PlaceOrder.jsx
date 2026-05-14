@@ -63,6 +63,7 @@ const PlaceOrder = () => {
     street: '', city: '', state: '',
     pincode: '', country: '', phone: ''
   });
+  const [errors, setErrors] = useState({});
 
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [saveAddressEnabled, setSaveAddressEnabled] = useState(false);
@@ -75,13 +76,88 @@ const PlaceOrder = () => {
     } catch(e) {}
   }, []);
 
-  const handleSelectAddress = (addr) => {
-    setFormData(addr);
-    toast.info(`Selected address: ${addr.addressName}`);
+  const validateField = (name, value) => {
+    let error = "";
+    const val = value.trim();
+
+    switch (name) {
+      case "firstName":
+      case "lastName":
+        if (!val) error = "Required field";
+        else if (val.length < 2) error = "Minimum 2 characters required";
+        else if (!/^[A-Za-z\s]+$/.test(val)) error = "Only alphabets allowed";
+        break;
+      case "email":
+        if (!val) error = "Required field";
+        else if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(val)) error = "Please enter a valid Gmail address";
+        break;
+      case "phone":
+        if (!val) error = "Required field";
+        else if (!/^[0-9]{10}$/.test(val)) error = "Please enter a valid 10-digit mobile number";
+        break;
+      case "pincode":
+        if (!val) error = "Required field";
+        else if (!/^[0-9]{6}$/.test(val)) error = "Please enter a valid 6-digit pincode";
+        break;
+      case "street":
+        if (!val) error = "Required field";
+        else if (val.length < 5) error = "Minimum 5 characters required";
+        break;
+      case "city":
+      case "state":
+      case "country":
+        if (!val) error = "Required field";
+        else if (!/^[A-Za-z\s]+$/.test(val)) error = "Only alphabets allowed";
+        break;
+      default:
+        break;
+    }
+    return error;
   };
 
-  const onChangeHandler = (e) =>
-    setFormData(d => ({ ...d, [e.target.name]: e.target.value }));
+  const handleSelectAddress = (addr) => {
+    const newFormData = {
+      firstName: addr.firstName || '',
+      lastName: addr.lastName || '',
+      email: addr.email || '',
+      street: addr.street || '',
+      city: addr.city || '',
+      state: addr.state || '',
+      pincode: addr.pincode || '',
+      country: addr.country || '',
+      phone: addr.phone || ''
+    };
+    setFormData(newFormData);
+    const newErrors = {};
+    for (const key in newFormData) {
+      newErrors[key] = validateField(key, newFormData[key]);
+    }
+    setErrors(newErrors);
+    toast.info(`Selected address: ${addr.addressName || 'Saved Address'}`);
+  };
+
+  const onChangeHandler = (e) => {
+    const { name, value } = e.target;
+    const sanitizedValue = value.replace(/^\s+/, '').replace(/\s{2,}/g, ' ');
+    setFormData(d => ({ ...d, [name]: sanitizedValue }));
+    setErrors(prev => ({ ...prev, [name]: validateField(name, sanitizedValue) }));
+  };
+
+  const validateAll = () => {
+    const newErrors = {};
+    let isValid = true;
+    for (const key in formData) {
+      const error = validateField(key, formData[key]);
+      if (error) {
+        newErrors[key] = error;
+        isValid = false;
+      }
+    }
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const isFormValid = Object.values(errors).every(err => err === "") && Object.values(formData).every(val => val.trim() !== "");
 
   /* ================= COUPONS ================= */
   const [couponCode, setCouponCode] = useState('');
@@ -197,14 +273,24 @@ const PlaceOrder = () => {
   const onSubmitHandler = async (e) => {
     e.preventDefault();
 
+    if (!validateAll()) {
+      toast.error("Please fix the validation errors");
+      return;
+    }
+
     if (orderItems.length === 0) {
       toast.error(isBuyNow ? "Product not found" : "Cart is empty");
       return;
     }
 
+    const trimmedData = {};
+    for (const key in formData) {
+      trimmedData[key] = formData[key].trim();
+    }
+
     // Save Address Logic
     if (saveAddressEnabled && addressName.trim()) {
-      const newSaved = [...savedAddresses, { ...formData, addressName: addressName.trim() }];
+      const newSaved = [...savedAddresses, { ...trimmedData, addressName: addressName.trim() }];
       setSavedAddresses(newSaved);
       localStorage.setItem('savedAddresses', JSON.stringify(newSaved));
       toast.success("Address saved locally for future use!");
@@ -214,7 +300,7 @@ const PlaceOrder = () => {
       const totalAmount = Math.max(0, subTotal + effectiveDeliveryFee + (method === "cod" ? 100 : 0) - discountAmount - (method === "razorpay" ? razorpayDiscount : 0));
 
       const orderData = {
-        address: formData,
+        address: trimmedData,
         items: orderItems,
         amount: totalAmount,
         coupon: couponData?.code || null,
@@ -304,17 +390,28 @@ const PlaceOrder = () => {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 mt-6 sm:mt-8">
               {[
-                ['firstName','First name'],['lastName','Last name'],
-                ['email','Email'],['phone','Phone'],
-                ['street','Street'],['city','City'],
-                ['state','State'],['pincode','Pin code'],
-                ['country','Country']
-              ].map(([k,l]) => (
-                <input
-                  key={k} name={k} required value={formData[k]}
-                  onChange={onChangeHandler} placeholder={l}
-                  className="border border-gray-200 bg-gray-50 rounded-xl px-4 py-3 focus:ring-1 focus:ring-[#6B4E2E] outline-none"
-                />
+                { key: 'firstName', label: 'First Name *', placeholder: 'Enter your first name' },
+                { key: 'lastName', label: 'Last Name *', placeholder: 'Enter your last name' },
+                { key: 'email', label: 'Email *', placeholder: 'e.g. example@gmail.com' },
+                { key: 'phone', label: 'Mobile Number *', placeholder: '10-digit mobile number' },
+                { key: 'street', label: 'Address Line *', placeholder: 'Enter complete address' },
+                { key: 'city', label: 'City *', placeholder: 'Enter city name' },
+                { key: 'state', label: 'State *', placeholder: 'Enter state name' },
+                { key: 'pincode', label: 'Pincode *', placeholder: '6-digit pincode' },
+                { key: 'country', label: 'Country *', placeholder: 'Enter country name' }
+              ].map(({ key, label, placeholder }) => (
+                <div key={key} className="flex flex-col gap-1">
+                  <label className="text-sm font-medium text-gray-700 ml-1">{label}</label>
+                  <input
+                    name={key} 
+                    value={formData[key]}
+                    onChange={onChangeHandler} 
+                    placeholder={placeholder}
+                    className={`border bg-gray-50 rounded-xl px-4 py-3 outline-none transition-colors
+                      ${errors[key] ? 'border-red-500 focus:ring-1 focus:ring-red-500' : 'border-gray-200 focus:ring-1 focus:ring-[#6B4E2E]'}`}
+                  />
+                  {errors[key] && <span className="text-xs text-red-500 ml-1 animate-fade-in">{errors[key]}</span>}
+                </div>
               ))}
             </div>
 
@@ -473,7 +570,7 @@ const PlaceOrder = () => {
             <div className="mt-8">
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !isFormValid}
                 className="w-full bg-[#6B4E2E] text-white px-8 py-4 rounded-xl font-bold tracking-wide hover:bg-[#5a4225] transition disabled:opacity-70 disabled:cursor-not-allowed shadow-md shadow-[#6B4E2E]/20"
               >
                 {loading ? "PROCESSING..." : "PLACE ORDER"}
