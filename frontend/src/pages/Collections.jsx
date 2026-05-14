@@ -193,6 +193,7 @@ import { assets } from '../assets/assets'
 import Title from '../components/Title'
 import ProductItem from '../components/ProductItem'
 import { useLocation } from 'react-router-dom'
+import { Shirt, ShoppingBag, Glasses, Tag } from 'lucide-react'
 
 const Collections = () => {
   const { products, search, showSearch } = useContext(ShopContext)
@@ -335,17 +336,33 @@ const Collections = () => {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 gap-y-8">
-          {filterProducts.map(item => (
-            <ProductItem
-              key={item._id}
-              id={item._id}
-              name={item.name}
-              image={item.image}
-              price={item.price}
-              actualPrice={item.actualPrice}
-              isPreOrder={item.isPreOrder}
-            />
-          ))}
+          {products.length === 0 ? (
+            Array.from({ length: 8 }).map((_, idx) => {
+              const icons = [Shirt, ShoppingBag, Glasses, Tag];
+              const Icon = icons[idx % icons.length];
+              return (
+                <div key={idx} className="flex flex-col gap-3 animate-pulse">
+                  <div className="bg-[#EFE2C6]/40 rounded-xl h-64 sm:h-80 w-full flex items-center justify-center">
+                    <Icon className="text-[#6B4E2E]/30 animate-bounce" size={40} style={{ animationDelay: `${idx * 0.15}s` }} />
+                  </div>
+                  <div className="h-4 bg-[#EFE2C6]/60 rounded-md w-3/4 mt-1"></div>
+                  <div className="h-4 bg-[#EFE2C6]/60 rounded-md w-1/3"></div>
+                </div>
+              );
+            })
+          ) : (
+            filterProducts.map(item => (
+              <ProductItem
+                key={item._id}
+                id={item._id}
+                name={item.name}
+                image={item.image}
+                price={item.price}
+                actualPrice={item.actualPrice}
+                isPreOrder={item.isPreOrder}
+              />
+            ))
+          )}
         </div>
       </div>
     </div>

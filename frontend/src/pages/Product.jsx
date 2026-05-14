@@ -276,7 +276,7 @@ const Product = () => {
 
             {/* MOBILE HORIZONTAL SCROLL GALLERY */}
             <div className="sm:hidden w-full relative">
-              <div 
+              <div
                 ref={scrollRef}
                 onScroll={handleScroll}
                 className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar rounded-2xl bg-gray-50 h-[60vh] scroll-smooth"
@@ -299,7 +299,7 @@ const Product = () => {
                   </div>
                 ))}
               </div>
-              
+
               {/* Mobile Swipe Indicators */}
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10 bg-black/20 backdrop-blur-md px-3 py-1.5 rounded-full pointer-events-none">
                 {image.map((_, idx) => (
