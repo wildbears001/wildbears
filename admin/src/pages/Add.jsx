@@ -17,16 +17,17 @@ const Add = ({ token }) => {
   const [quality, setQuality] = useState('');
   const [actualPrice, setActualPrice] = useState('');
   const [price, setPrice] = useState('');
-  const [stock, setStock] = useState('');
   const [category, setCategory] = useState('Men');
   const [subCategory, setSubCategory] = useState('Topwear');
   const [bestseller, setBestseller] = useState(false);
-  const [sizes, setSizes] = useState([]);
+  const [sizes, setSizes] = useState([]); // Array of { size, stock }
 
   // Pre-order fields
   const [isPreOrder, setIsPreOrder] = useState(false);
   const [preOrderAvailableDate, setPreOrderAvailableDate] = useState('');
   const [maxPreOrderQty, setMaxPreOrderQty] = useState('');
+
+  const totalStock = sizes.reduce((acc, item) => acc + (Number(item.stock) || 0), 0);
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
@@ -39,7 +40,7 @@ const Add = ({ token }) => {
       formData.append('features', features);
       formData.append('quality', quality);
       formData.append('price', price);
-      formData.append('stock', stock);
+      formData.append('stock', totalStock);
       formData.append('category', category);
       formData.append('subCategory', subCategory);
       formData.append('bestseller', bestseller);
@@ -73,7 +74,6 @@ const Add = ({ token }) => {
         setImage4(false);
         setActualPrice('');
         setPrice('');
-        setStock('');
         setType('');
         setQuality('');
         setFeatures('');
@@ -186,27 +186,60 @@ const Add = ({ token }) => {
             <input onChange={(e)=>setPrice(e.target.value)} value={price} className='w-full px-4 py-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-gray-900 font-semibold text-green-700' type="number" placeholder='0' required min="0"/>
           </div>
           <div className='md:col-span-1'>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>Stock Count</label>
-            <input onChange={(e)=>setStock(e.target.value)} value={stock} className='w-full px-4 py-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-gray-900 text-blue-700 font-semibold' type="number" placeholder='0' required min="0"/>
+            <label className='block text-sm font-medium text-gray-700 mb-2'>Total Stock</label>
+            <input value={totalStock} readOnly className='w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl outline-none font-semibold text-gray-500 cursor-not-allowed' type="number" placeholder='0' />
           </div>
         </div>
 
         {/* Sizes & Toggles */}
         <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-3'>Available Sizes</label>
+            <label className='block text-sm font-medium text-gray-700 mb-3'>Available Sizes & Stock</label>
             <div className='flex flex-wrap gap-3'>
-              {['S', 'M', 'L', 'XL', 'XXL'].map((size) => (
-                <div 
-                  key={size}
-                  onClick={() => setSizes(prev => prev.includes(size) ? prev.filter(item => item !== size) : [...prev, size])}
-                  className={`w-12 h-12 flex items-center justify-center rounded-xl font-medium cursor-pointer transition-all border
-                    ${sizes.includes(size) ? 'bg-gray-900 text-white border-gray-900 shadow-md transform scale-105' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'}`}
-                >
-                  {size}
-                </div>
-              ))}
+              {['S', 'M', 'L', 'XL', 'XXL'].map((size) => {
+                const isActive = sizes.some(item => item.size === size);
+                return (
+                  <div 
+                    key={size}
+                    onClick={() => {
+                      setSizes(prev => isActive 
+                        ? prev.filter(item => item.size !== size) 
+                        : [...prev, { size, stock: 0 }]
+                      );
+                    }}
+                    className={`w-12 h-12 flex items-center justify-center rounded-xl font-medium cursor-pointer transition-all border
+                      ${isActive ? 'bg-gray-900 text-white border-gray-900 shadow-md transform scale-105' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'}`}
+                  >
+                    {size}
+                  </div>
+                );
+              })}
             </div>
+            
+            {sizes.length > 0 && (
+              <div className='mt-5 flex flex-col gap-3 bg-white p-4 border border-gray-200 rounded-xl'>
+                <p className='text-sm font-semibold text-gray-700 border-b pb-2'>Enter Stock for Selected Sizes</p>
+                {sizes.map(item => (
+                  <div key={item.size} className='flex items-center gap-4'>
+                    <div className='w-10 h-10 flex items-center justify-center bg-gray-100 rounded-lg font-bold text-gray-700'>
+                      {item.size}
+                    </div>
+                    <input
+                      type='number'
+                      min='0'
+                      required
+                      placeholder='Stock qty'
+                      className='flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none'
+                      value={item.stock}
+                      onChange={(e) => {
+                        const val = Math.max(0, Number(e.target.value));
+                        setSizes(prev => prev.map(s => s.size === item.size ? { ...s, stock: val } : s));
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           
           <div className='flex flex-col justify-center'>

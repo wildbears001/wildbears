@@ -8,13 +8,13 @@ const SizeChart = () => {
   };
 
   return (
-    <div className="relative w-full">
+    <div>
       {/* Button */}
       <button
         onClick={toggleChart}
-        className="bg-[#6B4E2E] text-white px-4 py-2 rounded hover:bg-gray-700 transition"
+        className="text-sm font-semibold text-gray-500 underline decoration-gray-300 underline-offset-4 hover:text-[#6B4E2E] transition-colors flex items-center gap-1"
       >
-        View Size Chart
+        Size Guide
       </button>
 
       {/* Modal */}

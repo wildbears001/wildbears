@@ -28,8 +28,21 @@ const ShopContextProvider = (props)=>{
             return;
         }
 
+        const product = products.find(p => p._id === itemId);
+        if (!product) return;
+        
+        let normalizedSizes = product.sizes?.map(s => typeof s === 'string' ? { size: s, stock: product.stock } : s) || [];
+        const sizeData = normalizedSizes.find(s => s.size === size);
+        const maxStock = sizeData ? sizeData.stock : product.stock;
 
         let cartData = structuredClone(cartItems);
+        const currentQty = cartData[itemId]?.[size] || 0;
+
+        if (currentQty + 1 > maxStock) {
+            toast.error(`Cannot add more. Only ${maxStock} left for size ${size}.`);
+            return;
+        }
+
         if(cartData[itemId]){
             if (cartData[itemId][size]) {
                 cartData[itemId][size] +=1;
@@ -82,6 +95,18 @@ const ShopContextProvider = (props)=>{
     // },[cartItems])
 
     const updateQuantity = async (itemId,size,quantity)=>{
+        const product = products.find(p => p._id === itemId);
+        if (product && quantity > 0) {
+            let normalizedSizes = product.sizes?.map(s => typeof s === 'string' ? { size: s, stock: product.stock } : s) || [];
+            const sizeData = normalizedSizes.find(s => s.size === size);
+            const maxStock = sizeData ? sizeData.stock : product.stock;
+
+            if (quantity > maxStock) {
+                toast.error(`Maximum available stock is ${maxStock} for size ${size}`);
+                return;
+            }
+        }
+
         let cartData = structuredClone(cartItems);
         cartData[itemId][size] = quantity;
         setCartItems(cartData)

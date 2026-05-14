@@ -41,8 +41,11 @@ const List = ({ token }) => {
     e.preventDefault();
     try {
       const fd = new FormData();
-      const fields = ["_id", "name", "description", "category", "subCategory", "type", "features", "quality", "price", "actualPrice", "bestseller", "isPreOrder", "stock"];
+      const fields = ["_id", "name", "description", "category", "subCategory", "type", "features", "quality", "price", "actualPrice", "bestseller", "isPreOrder"];
       fields.forEach(f => fd.append(f, editProduct[f]));
+      
+      const totalStock = (editProduct.sizes || []).reduce((sum, item) => sum + (Number(item.stock) || 0), 0);
+      fd.append("stock", totalStock);
       
       fd.append("preOrderAvailableDate", editProduct.preOrderAvailableDate || "");
       fd.append("maxPreOrderQty", editProduct.maxPreOrderQty || "");
@@ -129,7 +132,7 @@ const List = ({ token }) => {
 
               {/* Actions Footer */}
               <div className="grid grid-cols-2 border-t border-gray-100 bg-gray-50 mt-auto">
-                 <button onClick={() => setEditProduct({ ...p, newImages: [null, null, null, null], sizes: p.sizes || [] })} className="flex items-center justify-center gap-2 py-3 hover:bg-[#6B4E2E] hover:text-white text-gray-600 font-semibold text-sm transition-colors border-r border-gray-200">
+                 <button onClick={() => setEditProduct({ ...p, newImages: [null, null, null, null], sizes: (p.sizes || []).map(s => typeof s === 'string' ? {size: s, stock: 0} : s) })} className="flex items-center justify-center gap-2 py-3 hover:bg-[#6B4E2E] hover:text-white text-gray-600 font-semibold text-sm transition-colors border-r border-gray-200">
                    <PencilLine size={16} /> Edit
                  </button>
                  <button onClick={() => removeProduct(p._id)} className="flex items-center justify-center gap-2 py-3 hover:bg-red-500 hover:text-white text-red-500 font-semibold text-sm transition-colors">
@@ -240,30 +243,63 @@ const List = ({ token }) => {
                  <input onChange={(e)=>setEditProduct({...editProduct, price: e.target.value})} value={editProduct.price || ''} className='w-full px-4 py-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-gray-900 font-semibold text-green-700' type="number" required min="0"/>
                </div>
                <div className='md:col-span-1'>
-                 <label className='block text-sm font-medium text-gray-700 mb-2'>Stock Count</label>
-                 <input onChange={(e)=>setEditProduct({...editProduct, stock: e.target.value})} value={editProduct.stock || ''} className='w-full px-4 py-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-gray-900 text-blue-700 font-semibold' type="number" required min="0"/>
+                 <label className='block text-sm font-medium text-gray-700 mb-2'>Total Stock</label>
+                 <input readOnly value={(editProduct.sizes || []).reduce((sum, item) => sum + (Number(item.stock) || 0), 0)} className='w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl outline-none text-gray-500 font-semibold cursor-not-allowed' type="number" />
                </div>
              </div>
 
              {/* Sizes & Toggles */}
              <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
                <div>
-                 <label className='block text-sm font-medium text-gray-700 mb-3'>Available Sizes</label>
+                 <label className='block text-sm font-medium text-gray-700 mb-3'>Available Sizes & Stock</label>
                  <div className='flex flex-wrap gap-3'>
-                   {['S', 'M', 'L', 'XL', 'XXL'].map((size) => (
-                     <div 
-                       key={size}
-                       onClick={() => setEditProduct(prev => ({
-                         ...prev,
-                         sizes: prev.sizes?.includes(size) ? prev.sizes.filter(item => item !== size) : [...(prev.sizes || []), size]
-                       }))}
-                       className={`w-12 h-12 flex items-center justify-center rounded-xl font-medium cursor-pointer transition-all border
-                         ${editProduct.sizes?.includes(size) ? 'bg-gray-900 text-white border-gray-900 shadow-md transform scale-105' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'}`}
-                     >
-                       {size}
-                     </div>
-                   ))}
+                   {['S', 'M', 'L', 'XL', 'XXL'].map((size) => {
+                     const isActive = editProduct.sizes?.some(item => item.size === size);
+                     return (
+                       <div 
+                         key={size}
+                         onClick={() => setEditProduct(prev => ({
+                           ...prev,
+                           sizes: isActive 
+                             ? prev.sizes.filter(item => item.size !== size) 
+                             : [...(prev.sizes || []), { size, stock: 0 }]
+                         }))}
+                         className={`w-12 h-12 flex items-center justify-center rounded-xl font-medium cursor-pointer transition-all border
+                           ${isActive ? 'bg-gray-900 text-white border-gray-900 shadow-md transform scale-105' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'}`}
+                       >
+                         {size}
+                       </div>
+                     );
+                   })}
                  </div>
+                 
+                 {editProduct.sizes?.length > 0 && (
+                   <div className='mt-5 flex flex-col gap-3 bg-white p-4 border border-gray-200 rounded-xl'>
+                     <p className='text-sm font-semibold text-gray-700 border-b pb-2'>Enter Stock for Selected Sizes</p>
+                     {editProduct.sizes.map(item => (
+                       <div key={item.size} className='flex items-center gap-4'>
+                         <div className='w-10 h-10 flex items-center justify-center bg-gray-100 rounded-lg font-bold text-gray-700'>
+                           {item.size}
+                         </div>
+                         <input
+                           type='number'
+                           min='0'
+                           required
+                           placeholder='Stock qty'
+                           className='flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none'
+                           value={item.stock}
+                           onChange={(e) => {
+                             const val = Math.max(0, Number(e.target.value));
+                             setEditProduct(prev => ({
+                               ...prev,
+                               sizes: prev.sizes.map(s => s.size === item.size ? { ...s, stock: val } : s)
+                             }));
+                           }}
+                         />
+                       </div>
+                     ))}
+                   </div>
+                 )}
                </div>
                
                <div className='flex flex-col justify-center'>

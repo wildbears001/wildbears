@@ -57,7 +57,20 @@ const placeOrder = async (req, res) => {
 
         if (items) {
             for (const item of items) {
-                await productModel.findByIdAndUpdate(item._id, { $inc: { stock: -item.quantity } });
+                const product = await productModel.findById(item._id);
+                if (product) {
+                    product.stock = Math.max(0, product.stock - item.quantity);
+                    if (product.sizes && product.sizes.length > 0) {
+                        product.sizes = product.sizes.map(s => {
+                            if (typeof s === 'string') return { size: s, stock: product.stock };
+                            if (s.size === item.size) {
+                                return { ...s, stock: Math.max(0, s.stock - item.quantity) };
+                            }
+                            return s;
+                        });
+                    }
+                    await product.save();
+                }
             }
         }
 
@@ -146,7 +159,20 @@ const verifyRazorpay = async (req,res)=>{
             
             if (order && order.items) {
                 for (const item of order.items) {
-                    await productModel.findByIdAndUpdate(item._id, { $inc: { stock: -item.quantity } });
+                    const product = await productModel.findById(item._id);
+                    if (product) {
+                        product.stock = Math.max(0, product.stock - item.quantity);
+                        if (product.sizes && product.sizes.length > 0) {
+                            product.sizes = product.sizes.map(s => {
+                                if (typeof s === 'string') return { size: s, stock: product.stock };
+                                if (s.size === item.size) {
+                                    return { ...s, stock: Math.max(0, s.stock - item.quantity) };
+                                }
+                                return s;
+                            });
+                        }
+                        await product.save();
+                    }
                 }
             }
 
