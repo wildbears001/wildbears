@@ -1,15 +1,6 @@
-import nodemailer from "nodemailer";
 import bcrypt from "bcrypt";
 import Otp from "../models/otpModel.js";
-
-// Mailer
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_ID,
-    pass: process.env.EMAIL_PASSWORD
-  }
-});
+import { sendOTPEmail } from "../services/emailService.js";
 
 // ✅ Generate random 6-digit OTP
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
@@ -27,13 +18,7 @@ export const sendOtp = async (req, res) => {
 
     await Otp.create({ email, otpHash });
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Your OTP Code",
-      html: `<h2>OTP Verification</h2>
-             <p>Your OTP code is <b>${otp}</b>. It will expire in 5 minutes.</p>`
-    });
+    await sendOTPEmail(email, otp);
 
     res.json({ success: true, message: "OTP sent" });
   } catch (err) {
