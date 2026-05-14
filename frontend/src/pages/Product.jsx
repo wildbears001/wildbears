@@ -73,8 +73,7 @@ const Product = () => {
       toast.error('Please select a size before purchasing.');
       return;
     }
-    addTOCart(productData._id, selectedSize);
-    navigate('/cart');
+    navigate(`/placeorder?buyNow=true&productId=${productData._id}&size=${selectedSize}`);
   };
 
   if (!productData) return null;

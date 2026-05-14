@@ -86,6 +86,7 @@ const Login = () => {
       }
 
       try {
+        setLoading(true)
         const res = await axios.post(`${backendUrl}/api/user/register`, {
           name,
           email,
@@ -100,9 +101,12 @@ const Login = () => {
         }
       } catch (err) {
         toast.error(err.message)
+      } finally {
+        setLoading(false)
       }
     } else {
       try {
+        setLoading(true)
         const res = await axios.post(`${backendUrl}/api/user/login`, {
           email,
           password
@@ -116,6 +120,8 @@ const Login = () => {
         }
       } catch (err) {
         toast.error(err.message)
+      } finally {
+        setLoading(false)
       }
     }
   }
@@ -214,10 +220,11 @@ const Login = () => {
 
               <button
                 type="submit"
+                disabled={loading}
                 className="w-full bg-[#6B4E2E] text-white py-2 rounded-md
-                           tracking-wide"
+                           tracking-wide disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center h-10"
               >
-                Sign Up
+                {loading ? <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span> : 'Sign Up'}
               </button>
             </>
           )}
@@ -256,10 +263,11 @@ const Login = () => {
 
           <button
             type="submit"
+            disabled={loading}
             className="w-full bg-[#6B4E2E] text-white py-2 rounded-md
-                       tracking-wide"
+                       tracking-wide disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center h-10"
           >
-            Sign In
+            {loading ? <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span> : 'Sign In'}
           </button>
         </>
       )}
