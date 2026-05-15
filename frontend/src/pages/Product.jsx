@@ -64,9 +64,15 @@ const Product = () => {
       setProductData(currentProduct);
       setSelectedImage(currentProduct.image[0]);
       setCurrentIndex(0);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [productId, products]);
+
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, [productId]);
 
   const handleNextImage = () => {
     if (!productData) return;
