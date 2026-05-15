@@ -2,6 +2,8 @@ import React, { useContext, useEffect, useState } from 'react'
 import { ShopContext } from '../context/ShopContext'
 import Title from './Title';
 import ProductItem from './ProductItem';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const LatestCollection = () => {
     const {products} = useContext(ShopContext);
@@ -39,7 +41,36 @@ const LatestCollection = () => {
                }
         </div>
  
-
+        {/* Premium CTA Button */}
+        <div className="flex justify-center mt-16 sm:mt-20 mb-8">
+            <Link to="/collections" className="focus:outline-none inline-block">
+                <motion.div
+                    animate={{ y: [0, -6, 0] }}
+                    transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                >
+                    <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="group relative overflow-hidden bg-gradient-to-r from-[#6B4E2E] to-[#8B6A4A] text-white px-8 sm:px-12 py-4 sm:py-5 rounded-full font-bold uppercase tracking-[0.2em] text-xs sm:text-sm shadow-[0_10px_30px_-10px_rgba(107,78,46,0.6)] transition-all duration-300 hover:shadow-[0_20px_40px_-10px_rgba(107,78,46,0.8)]"
+                    >
+                        {/* Continuous Shimmer Animation */}
+                        <motion.div
+                            className="absolute top-0 bottom-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"
+                            initial={{ x: '-150%' }}
+                            animate={{ x: '150%' }}
+                            transition={{ repeat: Infinity, duration: 2.5, ease: "linear", repeatDelay: 1 }}
+                        />
+                        
+                        <div className="relative z-10 flex items-center justify-center gap-3">
+                            <span>Explore Collection</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 sm:w-6 sm:h-6 group-hover:translate-x-2 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                            </svg>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            </Link>
+        </div>
       
     </div>
   )
